@@ -32,11 +32,6 @@ public class AuthService
         
         var roles = await _userManager.GetRolesAsync(user);
         
-        if (!roles.Any())
-        {
-            roles.Add("User");
-        }
-        
         return _tokenService.CreateToken(user, roles);
     }
 }

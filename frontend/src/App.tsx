@@ -1,11 +1,15 @@
 import "./App.css";
 import "@mantine/core/styles.css";
 import { MantineProvider } from "@mantine/core";
+import { BrowserRouter } from "react-router-dom";
+import { AppRoutes } from "./routes/routes";
 
 function App() {
   return (
     <MantineProvider>
-      <h1>Dashboard</h1>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </MantineProvider>
   );
 }

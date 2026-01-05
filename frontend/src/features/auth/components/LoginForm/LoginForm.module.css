@@ -1,0 +1,20 @@
+.title {
+  font-family: Outfit, var(--mantine-font-family);
+  font-weight: 500;
+}
+
+.subtitle {
+  color: var(--mantine-color-dimmed);
+  font-size: var(--mantine-font-size-sm);
+  text-align: center;
+  margin-top: 5px;
+}
+
+.input {
+  transition: none;
+
+  &:focus-within {
+    outline: 1px solid #e4007f;
+    border-color: transparent;
+  }
+}
