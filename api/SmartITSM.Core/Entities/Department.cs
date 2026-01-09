@@ -8,11 +8,11 @@ public class Department
     
     [Required]
     [MaxLength(100)]
-    public string Name { get; set; } = string.Empty; // e.g. "R&D"
+    public string Name { get; set; } = string.Empty;
     
     [MaxLength(50)]
-    public string LocationCode { get; set; } = string.Empty; // e.g. "BLDG-A"
+    public string LocationCode { get; set; } = string.Empty;
     
-    // Navigation Property: One Department has many Users
+    // One Department has many Users
     public ICollection<User> Users { get; set; } = new List<User>();
 }
