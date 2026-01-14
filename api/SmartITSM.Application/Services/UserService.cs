@@ -77,6 +77,11 @@ public class UserService : IUserService
         var result = await _userManager.CreateAsync(user, dto.Password);
         if (!result.Succeeded)
         {
+            if (result.Errors.Any(e => e.Code == "DuplicateUserName" || e.Code == "DuplicateEmail"))
+            {
+                throw new Exception("User with this email already exists.");
+            }
+            
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
             throw new Exception($"Failed to create user: {errors}");
         }

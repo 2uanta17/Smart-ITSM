@@ -1,32 +1,27 @@
 import {
   Anchor,
   Button,
-  Checkbox,
   Container,
   Group,
   Paper,
   PasswordInput,
-  Text,
   TextInput,
   Title,
-  Alert,
   Stack,
 } from "@mantine/core";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
-
 import { loginSchema, type LoginSchema } from "../../types/schema";
 import { loginUser } from "../../api/auth";
 import classes from "./LoginForm.module.css";
 import { useAuthStore } from "@/stores/authStore";
 import { getErrorMessage } from "@/lib/utils";
+import { notifications } from "@mantine/notifications";
 
 export function LoginForm() {
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
-  const [globalError, setGlobalError] = useState("");
 
   const {
     register,
@@ -37,13 +32,21 @@ export function LoginForm() {
   });
 
   const onSubmit = async (data: LoginSchema) => {
-    setGlobalError("");
     try {
       const response = await loginUser(data);
       login(response.token);
+      notifications.show({
+        title: "Welcome back",
+        message: "Login successful",
+        color: "green",
+      });
       navigate("/app/dashboard");
     } catch (error: unknown) {
-      setGlobalError(getErrorMessage(error) || "Invalid email or password");
+      notifications.show({
+        title: "Authentication Failed",
+        message: getErrorMessage(error) || "Invalid email or password",
+        color: "red",
+      });
     }
   };
 
@@ -53,20 +56,13 @@ export function LoginForm() {
         IT Service Management
       </Title>
 
-      <Paper withBorder p={30} mt={30} radius="0">
+      <Paper withBorder p={30} mt={30}>
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack>
-            {globalError && (
-              <Alert color="red" variant="light" title="Authentication Failed">
-                {globalError}
-              </Alert>
-            )}
-
             <TextInput
               label="Email"
               placeholder="you@mail.com"
               required
-              radius="0"
               {...register("email")}
               error={errors.email?.message}
             />
@@ -75,7 +71,6 @@ export function LoginForm() {
               label="Password"
               placeholder="Your password"
               required
-              radius="0"
               mt="xs"
               {...register("password")}
               error={errors.password?.message}
@@ -87,7 +82,7 @@ export function LoginForm() {
               </Anchor>
             </Group>
 
-            <Button fullWidth radius="0" type="submit" loading={isSubmitting}>
+            <Button fullWidth type="submit" loading={isSubmitting}>
               Log in
             </Button>
           </Stack>
