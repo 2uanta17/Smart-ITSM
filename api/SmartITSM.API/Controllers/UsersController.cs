@@ -7,7 +7,7 @@ namespace SmartITSM.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize(Roles = "Admin,Technician")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -33,6 +33,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<UserDto>> Create(CreateUserDto dto)
     {
         try 
@@ -47,6 +48,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(int id, UpdateUserDto dto)
     {
         var updated = await _userService.UpdateAsync(id, dto);
@@ -55,6 +57,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _userService.DeleteAsync(id);

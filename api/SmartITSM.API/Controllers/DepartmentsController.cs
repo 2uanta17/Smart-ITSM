@@ -7,7 +7,7 @@ namespace SmartITSM.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize]
+[Authorize(Roles = "Admin,Technician")]
 public class DepartmentsController : ControllerBase
 {
     private readonly IDepartmentService _service;
