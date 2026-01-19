@@ -38,8 +38,8 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         // Seed Roles
         modelBuilder.Entity<IdentityRole<int>>().HasData(
             new IdentityRole<int> { Id = 1, Name = "Admin", NormalizedName = "ADMIN" },
-            new IdentityRole<int> { Id = 2, Name = "Manager", NormalizedName = "MANAGER" },
-            new IdentityRole<int> { Id = 3, Name = "Employee", NormalizedName = "EMPLOYEE" }
+            new IdentityRole<int> { Id = 2, Name = "Technician", NormalizedName = "TECHNICIAN" },
+            new IdentityRole<int> { Id = 3, Name = "Requester", NormalizedName = "REQUESTER" }
         );
         
         var hasher = new PasswordHasher<User>();
@@ -67,7 +67,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         // Asset Types
         modelBuilder.Entity<AssetType>().HasData(
             new AssetType { Id = 1, Name = "Laptop" },
-            new AssetType { Id = 2, Name = "Monitor" },
+            new AssetType { Id = 2, Name = "Desktop" },
             new AssetType { Id = 3, Name = "Printer" },
             new AssetType { Id = 4, Name = "Server" }
         );

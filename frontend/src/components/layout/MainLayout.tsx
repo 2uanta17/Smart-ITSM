@@ -3,12 +3,20 @@ import { AppShell, Group, Burger, Text, NavLink, Button } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import {
   IconDeviceDesktopAnalytics,
+  IconDevices,
   IconHierarchy2,
   IconUserShield,
 } from "@tabler/icons-react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
-const navData = [
+interface NavItem {
+  label: string;
+  link: string;
+  icon: React.ElementType;
+  allowedRoles?: string[];
+}
+
+const navData: NavItem[] = [
   {
     label: "Dashboard",
     link: "/app/dashboard",
@@ -18,9 +26,20 @@ const navData = [
     label: "Departments",
     link: "/app/departments",
     icon: IconHierarchy2,
-    adminOnly: true,
+    allowedRoles: ["Admin", "Technician"],
   },
-  { label: "Users", link: "/app/users", icon: IconUserShield, adminOnly: true },
+  {
+    label: "Users",
+    link: "/app/users",
+    icon: IconUserShield,
+    allowedRoles: ["Admin", "Technician"],
+  },
+  {
+    label: "Assets",
+    link: "/app/assets",
+    icon: IconDevices,
+    allowedRoles: ["Admin", "Technician"],
+  },
 ];
 
 export function MainLayout() {
@@ -29,7 +48,9 @@ export function MainLayout() {
   const location = useLocation();
 
   const links = navData.map((item) => {
-    if (item.adminOnly && user?.role !== "Admin") return null;
+    if (item.allowedRoles && user && !item.allowedRoles.includes(user.role)) {
+      return null;
+    }
 
     return (
       <NavLink

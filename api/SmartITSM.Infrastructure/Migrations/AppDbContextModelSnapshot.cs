@@ -61,14 +61,14 @@ namespace SmartITSM.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            Name = "Manager",
-                            NormalizedName = "MANAGER"
+                            Name = "Technician",
+                            NormalizedName = "TECHNICIAN"
                         },
                         new
                         {
                             Id = 3,
-                            Name = "Employee",
-                            NormalizedName = "EMPLOYEE"
+                            Name = "Requester",
+                            NormalizedName = "REQUESTER"
                         });
                 });
 
@@ -246,7 +246,7 @@ namespace SmartITSM.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            Name = "Monitor"
+                            Name = "Desktop"
                         },
                         new
                         {
@@ -520,7 +520,7 @@ namespace SmartITSM.Infrastructure.Migrations
                         {
                             Id = 1,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5c9601a7-4433-4dfc-8fed-62356161496e",
+                            ConcurrencyStamp = "a45510d8-5546-41f3-ac46-6dd055b5d7a4",
                             DepartmentId = 1,
                             Email = "admin@mail.com",
                             EmailConfirmed = true,
@@ -529,9 +529,9 @@ namespace SmartITSM.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN@MAIL.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPbqEKtj6NYMvyr+Dp29HiaQKDzgq/6clWrR+/UfG7yIOJoX71isH7F8TCKD2xBUyg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKPo1Y+cJPG2O5gIEWqfy4P2SDqzIJGyLGoynxHB62rLBPnwHXyBHCQLkL11Er1ltQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "26e25759-6603-42e8-97a3-6fdf326df5fe",
+                            SecurityStamp = "2b78457c-9653-4705-804f-58ca658586a5",
                             TwoFactorEnabled = false,
                             UserName = "admin@mail.com"
                         });

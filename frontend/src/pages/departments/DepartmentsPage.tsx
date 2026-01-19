@@ -19,8 +19,10 @@ import {
 } from "@/features/departments/api/departmentApi";
 import type { CreateDepartmentDto } from "@/features/departments/types/departmentTypes";
 import { DepartmentModal } from "@/features/departments/components/DepartmentModal";
+import { useAuthStore } from "@/stores/authStore";
 
 export const DepartmentsPage = () => {
+  const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -84,22 +86,26 @@ export const DepartmentsPage = () => {
     }
   };
 
+  const isAdmin = user?.role === "Admin";
+
   const rows = departments.map((element) => (
     <Table.Tr key={element.id}>
       <Table.Td>{element.id}</Table.Td>
       <Table.Td>{element.name}</Table.Td>
       <Table.Td>{element.locationCode}</Table.Td>
-      <Table.Td ta="center">
-        <Button
-          variant="light"
-          color="red"
-          size="compact-sm"
-          onClick={() => setDeleteId(element.id)}
-          disabled={deleteMutation.isPending && deleteId === element.id}
-        >
-          Delete
-        </Button>
-      </Table.Td>
+      {isAdmin && (
+        <Table.Td ta="center">
+          <Button
+            variant="light"
+            color="red"
+            size="compact-sm"
+            onClick={() => setDeleteId(element.id)}
+            disabled={deleteMutation.isPending && deleteId === element.id}
+          >
+            Delete
+          </Button>
+        </Table.Td>
+      )}
     </Table.Tr>
   ));
 
@@ -109,7 +115,7 @@ export const DepartmentsPage = () => {
     <div>
       <Group justify="space-between" mb="lg">
         <Title order={2}>Departments</Title>
-        <Button onClick={open}>Add Department</Button>
+        {isAdmin && <Button onClick={open}>Add Department</Button>}
       </Group>
 
       <Paper p="xs" withBorder pos="relative">
@@ -121,9 +127,11 @@ export const DepartmentsPage = () => {
               <Table.Th w={50}>ID</Table.Th>
               <Table.Th>Name</Table.Th>
               <Table.Th>Location</Table.Th>
-              <Table.Th w={100} ta="center">
-                Actions
-              </Table.Th>
+              {isAdmin && (
+                <Table.Th w={100} ta="center">
+                  Actions
+                </Table.Th>
+              )}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>

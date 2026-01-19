@@ -12,8 +12,8 @@ using SmartITSM.Infrastructure.Data;
 namespace SmartITSM.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260101214908_AddIdentity")]
-    partial class AddIdentity
+    [Migration("20260118183223_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -52,7 +52,27 @@ namespace SmartITSM.Infrastructure.Migrations
                         .HasDatabaseName("RoleNameIndex")
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
-                    b.ToTable("AspNetRoles", (string)null);
+                    b.ToTable("Roles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Admin",
+                            NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Technician",
+                            NormalizedName = "TECHNICIAN"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "Requester",
+                            NormalizedName = "REQUESTER"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -137,6 +157,13 @@ namespace SmartITSM.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            RoleId = 1
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
@@ -222,7 +249,7 @@ namespace SmartITSM.Infrastructure.Migrations
                         new
                         {
                             Id = 2,
-                            Name = "Monitor"
+                            Name = "Desktop"
                         },
                         new
                         {
@@ -300,6 +327,14 @@ namespace SmartITSM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Departments");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            LocationCode = "HQ-L1",
+                            Name = "IT Support"
+                        });
                 });
 
             modelBuilder.Entity("SmartITSM.Core.Entities.Ticket", b =>
@@ -433,6 +468,9 @@ namespace SmartITSM.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
 
@@ -478,7 +516,28 @@ namespace SmartITSM.Infrastructure.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
-                    b.ToTable("AspNetUsers", (string)null);
+                    b.ToTable("Users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a45510d8-5546-41f3-ac46-6dd055b5d7a4",
+                            DepartmentId = 1,
+                            Email = "admin@mail.com",
+                            EmailConfirmed = true,
+                            FullName = "System Admin",
+                            IsActive = true,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ADMIN@MAIL.COM",
+                            NormalizedUserName = "ADMIN@MAIL.COM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKPo1Y+cJPG2O5gIEWqfy4P2SDqzIJGyLGoynxHB62rLBPnwHXyBHCQLkL11Er1ltQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "2b78457c-9653-4705-804f-58ca658586a5",
+                            TwoFactorEnabled = false,
+                            UserName = "admin@mail.com"
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
