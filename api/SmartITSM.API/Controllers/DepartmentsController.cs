@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartITSM.Application.DTOs;
 using SmartITSM.Application.Interfaces;
+using SmartITSM.Core.Constants;
 
 namespace SmartITSM.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin,Technician")]
+[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Technician}")]
 public class DepartmentsController : ControllerBase
 {
     private readonly IDepartmentService _service;
@@ -33,7 +34,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<ActionResult<DepartmentDto>> Create(CreateDepartmentDto dto)
     {
         var created = await _service.CreateAsync(dto);
@@ -41,7 +42,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(int id, UpdateDepartmentDto dto)
     {
         var updated = await _service.UpdateAsync(id, dto);
@@ -50,7 +51,7 @@ public class DepartmentsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _service.DeleteAsync(id);

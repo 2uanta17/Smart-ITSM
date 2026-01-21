@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using SmartITSM.Core.Entities;
+using SmartITSM.Core.Constants;
 
 namespace SmartITSM.Infrastructure.Data;
 
@@ -21,25 +22,23 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<Category> Categories { get; set; }
     public DbSet<TicketStatus> TicketStatuses { get; set; }
     
-    // Data seeding
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         
-        // Config
         modelBuilder.Entity<User>().ToTable("Users");
         modelBuilder.Entity<IdentityRole<int>>().ToTable("Roles");
-        
-        // Seed Department
         modelBuilder.Entity<Department>().HasData(
             new Department { Id = 1, Name = "IT Support", LocationCode = "HQ-L1" }
         );
+        modelBuilder.Entity<Asset>()
+            .Property(a => a.Status)
+            .HasConversion<string>();
         
-        // Seed Roles
         modelBuilder.Entity<IdentityRole<int>>().HasData(
-            new IdentityRole<int> { Id = 1, Name = "Admin", NormalizedName = "ADMIN" },
-            new IdentityRole<int> { Id = 2, Name = "Technician", NormalizedName = "TECHNICIAN" },
-            new IdentityRole<int> { Id = 3, Name = "Requester", NormalizedName = "REQUESTER" }
+            new IdentityRole<int> { Id = 1, Name = AppRoles.Admin, NormalizedName = AppRoles.Admin.ToUpper() },
+            new IdentityRole<int> { Id = 2, Name = AppRoles.Technician, NormalizedName = AppRoles.Technician.ToUpper() },
+            new IdentityRole<int> { Id = 3, Name = AppRoles.Requester, NormalizedName = AppRoles.Requester.ToUpper() }
         );
         
         var hasher = new PasswordHasher<User>();
@@ -59,12 +58,10 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         
         modelBuilder.Entity<User>().HasData(admin);
         
-        // Assign Role to Admin
         modelBuilder.Entity<IdentityUserRole<int>>().HasData(
             new IdentityUserRole<int> { RoleId = 1, UserId = 1 }
         );
 
-        // Asset Types
         modelBuilder.Entity<AssetType>().HasData(
             new AssetType { Id = 1, Name = "Laptop" },
             new AssetType { Id = 2, Name = "Desktop" },
@@ -72,14 +69,12 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             new AssetType { Id = 4, Name = "Server" }
         );
 
-        // Categories
         modelBuilder.Entity<Category>().HasData(
             new Category { Id = 1, Name = "Hardware", DefaultPriority = "Medium" },
             new Category { Id = 2, Name = "Software", DefaultPriority = "Low" },
             new Category { Id = 3, Name = "Network", DefaultPriority = "High" }
         );
-
-        // Statuses
+        
         modelBuilder.Entity<TicketStatus>().HasData(
             new TicketStatus { Id = 1, Name = "Open" },
             new TicketStatus { Id = 2, Name = "Pending" },

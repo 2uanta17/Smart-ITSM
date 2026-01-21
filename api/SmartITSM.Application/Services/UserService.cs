@@ -79,11 +79,11 @@ public class UserService : IUserService
         {
             if (result.Errors.Any(e => e.Code == "DuplicateUserName" || e.Code == "DuplicateEmail"))
             {
-                throw new Exception("User with this email already exists.");
+                throw new InvalidOperationException("User with this email already exists.");
             }
             
             var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-            throw new Exception($"Failed to create user: {errors}");
+            throw new InvalidOperationException($"Failed to create user: {errors}");
         }
         
         await _userManager.AddToRoleAsync(user, dto.Role);

@@ -2,12 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using SmartITSM.Application.DTOs;
 using SmartITSM.Application.Interfaces;
+using SmartITSM.Core.Constants;
 
 namespace SmartITSM.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin,Technician")]
+[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Technician}")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
@@ -33,22 +34,15 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<ActionResult<UserDto>> Create(CreateUserDto dto)
     {
-        try 
-        {
-            var created = await _userService.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
-        }
-        catch (Exception ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
+        var created = await _userService.CreateAsync(dto);
+        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Update(int id, UpdateUserDto dto)
     {
         var updated = await _userService.UpdateAsync(id, dto);
@@ -57,7 +51,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = AppRoles.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _userService.DeleteAsync(id);

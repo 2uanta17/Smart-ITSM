@@ -1,12 +1,14 @@
-﻿namespace SmartITSM.Core.Entities;
+﻿using SmartITSM.Core.Enums;
+
+namespace SmartITSM.Core.Entities;
 
 public class Asset
 {
     public int Id { get; set; }
-    public string AssetTag { get; set; } = string.Empty; // e.g "CANON-001"
+    public string AssetTag { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string SerialNum { get; set; } = string.Empty;
-    public string Status { get; set; } = "InUse";
+    public AssetStatus Status { get; set; } = AssetStatus.InUse;
     
     public int TypeId { get; set; }
     public AssetType Type { get; set; } = null!;
