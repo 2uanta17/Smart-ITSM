@@ -10,4 +10,5 @@ public interface IAssetRepository
     Task<Asset> AddAsync(Asset asset);
     Task UpdateAsync(Asset asset);
     Task DeleteAsync(Asset asset);
+    Task<IEnumerable<AssetType>> GetTypesAsync();
 }

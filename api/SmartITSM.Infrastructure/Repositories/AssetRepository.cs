@@ -62,4 +62,8 @@ public class AssetRepository : IAssetRepository
         _context.Assets.Remove(asset);
         await _context.SaveChangesAsync();
     }
+    public async Task<IEnumerable<AssetType>> GetTypesAsync()
+    {
+        return await _context.AssetTypes.AsNoTracking().ToListAsync();
+    }
 }

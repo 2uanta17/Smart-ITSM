@@ -19,7 +19,7 @@ public class AssetService : IAssetService
 
     public async Task<IEnumerable<AssetDto>> GetAllAsync(int? typeId = null)
     {
-        var assets = await _repository.GetAllAsync();
+        var assets = await _repository.GetAllAsync(typeId);
         return assets.Select(MapToDto);
     }
 
@@ -110,6 +110,15 @@ public class AssetService : IAssetService
 
         await _repository.DeleteAsync(asset);
         return true;
+    }
+    public async Task<IEnumerable<AssetTypeDto>> GetTypesAsync()
+    {
+        var types = await _repository.GetTypesAsync();
+        return types.Select(t => new AssetTypeDto 
+        { 
+            Id = t.Id, 
+            Name = t.Name 
+        });
     }
 
     private static AssetDto MapToDto(Asset asset)

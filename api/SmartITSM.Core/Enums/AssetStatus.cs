@@ -5,5 +5,6 @@ public enum AssetStatus
     InStock,
     InUse,
     Retired,
-    Maintenance
+    Maintenance,
+    Broken
 }

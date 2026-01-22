@@ -21,7 +21,7 @@ public class AssetsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<AssetDto>>> GetAll([FromQuery] int? typeId)
     {
-        return Ok(await _service.GetAllAsync());
+        return Ok(await _service.GetAllAsync(typeId));
     }
 
     [HttpGet("{id}")]
@@ -65,5 +65,12 @@ public class AssetsController : ControllerBase
         var result = await _service.DeleteAsync(id);
         if (!result) return NotFound();
         return NoContent();
+    }
+    
+    [HttpGet("types")]
+    public async Task<ActionResult<IEnumerable<AssetTypeDto>>> GetTypes()
+    {
+        var types = await _service.GetTypesAsync();
+        return Ok(types);
     }
 }

@@ -13,7 +13,7 @@ const schema = z.object({
     .pipe(z.email("Invalid email format")),
   password: z.string().min(6, "Min 6 characters"),
   departmentId: z.string().min(1, "Department is required"),
-  role: z.enum(["Admin", "Manager", "Employee"]),
+  role: z.enum(["Admin", "Technician", "Requester"]),
 });
 
 interface Props {
@@ -39,7 +39,7 @@ export const UserModal = ({
     formState: { errors },
   } = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { role: "Employee" },
+    defaultValues: { role: "Requester" },
   });
 
   const handleFormSubmit = (data: any) => {
@@ -96,7 +96,7 @@ export const UserModal = ({
           render={({ field }) => (
             <Select
               label="Role"
-              data={["Admin", "Manager", "Employee"]}
+              data={["Admin", "Technician", "Requester"]}
               {...field}
               error={errors.role?.message as string}
               mb="md"

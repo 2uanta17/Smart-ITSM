@@ -10,4 +10,5 @@ public interface IAssetService
     Task<bool> UpdateAsync(int id, UpdateAssetDto dto);
     Task<bool> AssignToUserAsync(int id, int? userId);
     Task<bool> DeleteAsync(int id);
+    Task<IEnumerable<AssetTypeDto>> GetTypesAsync();
 }
