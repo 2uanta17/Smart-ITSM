@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -38,7 +39,11 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     .AddDefaultTokenProviders();
 
 // API Controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers(options =>
+{
+    // Fix: Remove JQuery Form Value Provider to prevent "Invalid JQuery syntax" error on file uploads
+    options.ValueProviderFactories.RemoveType<JQueryFormValueProviderFactory>();
+});
 
 // Authorization
 builder.Services.AddOpenApi(options =>
@@ -93,6 +98,9 @@ builder.Services.AddScoped<IAssetService, AssetService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 
+builder.Services.AddScoped<ITicketRepository, TicketRepository>();
+builder.Services.AddScoped<ITicketService, TicketService>();
+
 // Authentication Logic
 var jwtKey = builder.Configuration["JwtSettings:Key"];
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
@@ -127,6 +135,12 @@ builder.Services.AddAuthentication(options =>
 
 var app = builder.Build();
 
+var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -144,6 +158,8 @@ app.UseCors(x => x
     .SetIsOriginAllowed(origin => true));
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseAuthentication(); // Must be before Authorization
 app.UseAuthorization();

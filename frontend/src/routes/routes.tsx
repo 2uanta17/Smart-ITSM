@@ -5,6 +5,9 @@ import { DepartmentsPage } from "@/pages/departments/DepartmentsPage";
 import { UsersPage } from "@/pages/users/UsersPage";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AssetsPage } from "@/pages/assets/AssetsPage";
+import { CreateTicketPage } from "@/pages/tickets/CreateTicketPage";
+import { TicketListPage } from "@/pages/tickets/TicketListPage";
+import { TicketDetailPage } from "@/pages/tickets/TicketDetailPage";
 
 export const AppRoutes = () => {
   return (
@@ -14,6 +17,9 @@ export const AppRoutes = () => {
       <Route element={<ProtectedRoute />}>
         <Route path="/app" element={<MainLayout />}>
           <Route path="dashboard" element={<div>Dashboard</div>} />
+          <Route path="tickets" element={<TicketListPage />} />
+          <Route path="tickets/create" element={<CreateTicketPage />} />
+          <Route path="tickets/:id" element={<TicketDetailPage />} />
           <Route
             element={<ProtectedRoute allowedRoles={["Admin", "Technician"]} />}
           >

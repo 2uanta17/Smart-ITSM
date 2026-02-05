@@ -12,16 +12,18 @@ public class Ticket
     
     public string Description { get; set; } = string.Empty;
     
-    public TicketPriority Priority { get; set; } // Enum: Low, Medium, High
+    public TicketPriority Priority { get; set; }
     
     public int StatusId { get; set; }
-    public TicketStatus? Status { get; set; }     // Enum: Open, Resolved
+    public TicketStatus? Status { get; set; }
     
     public int CategoryId { get; set; }
     public Category? Category { get; set; }
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? ResolvedAt { get; set; }
+    
+    public string? AttachmentPath { get; set; }
     
     // Relationships
     public int RequesterId { get; set; }

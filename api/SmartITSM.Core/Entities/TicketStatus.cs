@@ -8,5 +8,5 @@ public class TicketStatus
     
     [Required]
     [MaxLength(50)]
-    public string Name { get; set; } = string.Empty; // e.g., "Open", "Resolved"
+    public string Name { get; set; } = string.Empty;
 }

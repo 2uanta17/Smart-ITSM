@@ -6,6 +6,7 @@ import {
   IconDevices,
   IconHierarchy2,
   IconUserShield,
+  IconTicket,
 } from "@tabler/icons-react";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
@@ -21,6 +22,11 @@ const navData: NavItem[] = [
     label: "Dashboard",
     link: "/app/dashboard",
     icon: IconDeviceDesktopAnalytics,
+  },
+  {
+    label: "Tickets",
+    link: "/app/tickets",
+    icon: IconTicket,
   },
   {
     label: "Departments",
@@ -48,7 +54,9 @@ export function MainLayout() {
   const location = useLocation();
 
   const links = navData.map((item) => {
-    if (item.allowedRoles && user && !item.allowedRoles.includes(user.role)) {
+    // If allowedRoles is defined, check if user has one of them.
+    // If user is null, hide protected items.
+    if (item.allowedRoles && (!user || !item.allowedRoles.includes(user.role))) {
       return null;
     }
 
@@ -62,6 +70,9 @@ export function MainLayout() {
         variant="filled"
         fw={500}
         active={location.pathname.startsWith(item.link)}
+        onClick={() => {
+          if (opened) toggle(); 
+        }}
       />
     );
   });
