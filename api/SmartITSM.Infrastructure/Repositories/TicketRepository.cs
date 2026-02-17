@@ -65,4 +65,36 @@ public class TicketRepository : ITicketRepository
         _context.Tickets.Remove(ticket);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<TicketComment>> GetCommentsAsync(int ticketId)
+    {
+        return await _context.TicketComments
+            .Include(tc => tc.User)
+            .Where(tc => tc.TicketId == ticketId)
+            .OrderBy(tc => tc.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<TicketComment> AddCommentAsync(TicketComment comment)
+    {
+        _context.TicketComments.Add(comment);
+        await _context.SaveChangesAsync();
+        return comment;
+    }
+
+    public async Task<AuditLog> AddAuditLogAsync(AuditLog log)
+    {
+        _context.AuditLogs.Add(log);
+        await _context.SaveChangesAsync();
+        return log;
+    }
+
+    public async Task<IEnumerable<AuditLog>> GetAuditLogsAsync(int ticketId)
+    {
+        return await _context.AuditLogs
+            .Include(al => al.User)
+            .Where(al => al.TicketId == ticketId)
+            .OrderByDescending(al => al.Timestamp)
+            .ToListAsync();
+    }
 }

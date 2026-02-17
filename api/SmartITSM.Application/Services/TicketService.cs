@@ -22,12 +22,9 @@ public class TicketService : ITicketService
         if (dto.Attachment != null && dto.Attachment.Length > 0)
         {
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-            if (!Directory.Exists(uploadsFolder))
-            {
-                Directory.CreateDirectory(uploadsFolder);
-            }
+            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
-            var uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(dto.Attachment.FileName);
+            var uniqueFileName = Guid.NewGuid() + Path.GetExtension(dto.Attachment.FileName);
             var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
             using (var fileStream = new FileStream(filePath, FileMode.Create))
@@ -52,7 +49,7 @@ public class TicketService : ITicketService
         };
 
         var created = await _repository.AddAsync(ticket);
-        
+
         // Re-fetch to get includes (Category, Requester) for the DTO
         var fullTicket = await _repository.GetByIdAsync(created.Id);
         return MapToDto(fullTicket!);
@@ -76,6 +73,102 @@ public class TicketService : ITicketService
         return ticket == null ? null : MapToDto(ticket);
     }
 
+    public async Task<IEnumerable<TicketCommentDto>> GetCommentsAsync(int ticketId)
+    {
+        var comments = await _repository.GetCommentsAsync(ticketId);
+        return comments.Select(c => new TicketCommentDto(
+            c.Id, c.TicketId, c.UserId, c.User.FullName, c.Content, c.CreatedAt));
+    }
+
+    public async Task<TicketCommentDto?> AddCommentAsync(int ticketId, int userId, CreateTicketCommentDto dto)
+    {
+        var ticket = await _repository.GetByIdAsync(ticketId);
+        if (ticket == null) return null;
+
+        var comment = new TicketComment
+        {
+            TicketId = ticketId,
+            UserId = userId,
+            Content = dto.Content,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        var created = await _repository.AddCommentAsync(comment);
+        
+        var fetchedComments = await _repository.GetCommentsAsync(ticketId);
+        var fullComment = fetchedComments.First(c => c.Id == created.Id);
+
+        return new TicketCommentDto(fullComment.Id, fullComment.TicketId, fullComment.UserId, fullComment.User.FullName,
+            fullComment.Content, fullComment.CreatedAt);
+    }
+
+    public async Task<bool> TakeTicketAsync(int ticketId, int technicianId)
+    {
+        var ticket = await _repository.GetByIdAsync(ticketId);
+        if (ticket == null) return false;
+        
+        ticket.AssignedTechId = technicianId;
+        ticket.StatusId = 3;
+
+        await _repository.UpdateAsync(ticket);
+        await _repository.AddAuditLogAsync(new AuditLog
+        {
+            TicketId = ticketId,
+            UserId = technicianId,
+            Action = "Ticket taken and marked as In Progress",
+            Timestamp = DateTime.UtcNow
+        });
+
+        return true;
+    }
+
+    public async Task<bool> ResolveTicketAsync(int ticketId, int technicianId)
+    {
+        var ticket = await _repository.GetByIdAsync(ticketId);
+        if (ticket == null || ticket.AssignedTechId != technicianId)
+            return false;
+        
+        ticket.StatusId = 4;
+        ticket.ResolvedAt = DateTime.UtcNow;
+
+        await _repository.UpdateAsync(ticket);
+        await _repository.AddAuditLogAsync(new AuditLog
+        {
+            TicketId = ticketId,
+            UserId = technicianId,
+            Action = "Ticket resolved",
+            Timestamp = DateTime.UtcNow
+        });
+
+        return true;
+    }
+
+    public async Task<bool> CancelTicketAsync(int ticketId, int requesterId)
+    {
+        var ticket = await _repository.GetByIdAsync(ticketId);
+        if (ticket == null || ticket.RequesterId != requesterId) return false;
+        
+        ticket.StatusId = 5;
+
+        await _repository.UpdateAsync(ticket);
+        await _repository.AddAuditLogAsync(new AuditLog
+        {
+            TicketId = ticketId,
+            UserId = requesterId,
+            Action = "Ticket cancelled by requester",
+            Timestamp = DateTime.UtcNow
+        });
+
+        return true;
+    }
+
+    public async Task<IEnumerable<AuditLogDto>> GetHistoryAsync(int ticketId)
+    {
+        var logs = await _repository.GetAuditLogsAsync(ticketId);
+        return logs.Select(l => new AuditLogDto(
+            l.Id, l.TicketId, l.Action, l.User.FullName, l.Timestamp));
+    }
+
     private static TicketDto MapToDto(Ticket ticket)
     {
         return new TicketDto(
@@ -90,7 +183,8 @@ public class TicketService : ITicketService
             ticket.ResolvedAt,
             !string.IsNullOrEmpty(ticket.AttachmentPath) ? $"/uploads/{ticket.AttachmentPath}" : null,
             ticket.RelatedAssetId,
-            ticket.AssignedTech?.FullName
+            ticket.AssignedTech?.FullName,
+            ticket.AssignedTechId
         );
     }
 }

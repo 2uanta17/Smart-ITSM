@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SmartITSM.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SmartITSM.Infrastructure.Data;
 namespace SmartITSM.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260215110602_AddChatAndAudit")]
+    partial class AddChatAndAudit
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -432,7 +435,7 @@ namespace SmartITSM.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Content")
+                    b.Property<string>("Comment")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -584,7 +587,7 @@ namespace SmartITSM.Infrastructure.Migrations
                         {
                             Id = 1,
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "de3f17a2-1f8f-4557-a8bf-3bbc13d50eaf",
+                            ConcurrencyStamp = "82707373-94ad-47b0-94ef-f30ce56124cb",
                             DepartmentId = 1,
                             Email = "admin@mail.com",
                             EmailConfirmed = true,
@@ -593,9 +596,9 @@ namespace SmartITSM.Infrastructure.Migrations
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN@MAIL.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEN+lGuguiDZQ/puPSA60CHJXzgheyv+35925zK9bg/JmI1F4iYHPMgDqE1wuLoAWjw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEO7I94daCLEM64klle3zX7zq/v5DOi2Tbc+y0fM5yLDobwEUrLMHLE7QWtzfY159AQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "154d09d0-f42b-4bfa-9ec3-ea464656f6b7",
+                            SecurityStamp = "22dd5a62-0970-4437-abf0-2724fb6abca2",
                             TwoFactorEnabled = false,
                             UserName = "admin@mail.com"
                         });

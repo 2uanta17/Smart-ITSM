@@ -18,19 +18,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
-// Db Context
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Identity Services
-builder.Services.AddIdentity<User, IdentityRole<int>>(options => 
+builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     {
-        // Identity options
         options.Password.RequireDigit = false;
         options.Password.RequiredLength = 6;
         options.Password.RequireNonAlphanumeric = false;
         options.User.RequireUniqueEmail = true;
-        
+
         options.ClaimsIdentity.UserIdClaimType = "sub";
         options.ClaimsIdentity.RoleClaimType = "role";
         options.ClaimsIdentity.EmailClaimType = "email";
@@ -38,14 +35,12 @@ builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
-// API Controllers
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddControllers(options =>
 {
-    // Fix: Remove JQuery Form Value Provider to prevent "Invalid JQuery syntax" error on file uploads
     options.ValueProviderFactories.RemoveType<JQueryFormValueProviderFactory>();
 });
 
-// Authorization
 builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
@@ -62,7 +57,7 @@ builder.Services.AddOpenApi(options =>
 
         document.Components ??= new OpenApiComponents();
         document.Components.SecuritySchemes.Add("Bearer", securityScheme);
-        
+
         document.SecurityRequirements.Add(new OpenApiSecurityRequirement
         {
             {
@@ -82,7 +77,6 @@ builder.Services.AddOpenApi(options =>
     });
 });
 
-// Register Service
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
 builder.Services.AddScoped<AuthService>();
 
@@ -101,45 +95,40 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 
-// Authentication Logic
 var jwtKey = builder.Configuration["JwtSettings:Key"];
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
 var jwtAudience = builder.Configuration["JwtSettings:Audience"];
 
 builder.Services.AddAuthentication(options =>
 {
-    // Prevent Identity from overriding JWT preference
     options.DefaultAuthenticateScheme =
-    options.DefaultChallengeScheme =
-    options.DefaultForbidScheme =
-    options.DefaultScheme =
-    options.DefaultSignInScheme =
-    options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme =
+            options.DefaultForbidScheme =
+                options.DefaultScheme =
+                    options.DefaultSignInScheme =
+                        options.DefaultSignOutScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
 {
     options.MapInboundClaims = false;
     options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)), ClockSkew = TimeSpan.Zero,
-            
-            RoleClaimType = "role", 
-            NameClaimType = JwtRegisteredClaimNames.Sub
-        };
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtIssuer,
+        ValidAudience = jwtAudience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)), ClockSkew = TimeSpan.Zero,
+
+        RoleClaimType = "role",
+        NameClaimType = JwtRegisteredClaimNames.Sub
+    };
 });
 
 var app = builder.Build();
 
 var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-if (!Directory.Exists(uploadsPath))
-{
-    Directory.CreateDirectory(uploadsPath);
-}
+if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
 
 if (app.Environment.IsDevelopment())
 {
@@ -154,6 +143,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors(x => x
     .WithOrigins("http://localhost:5173")
     .AllowAnyHeader()
+    .AllowAnyMethod()
     .AllowCredentials()
     .SetIsOriginAllowed(origin => true));
 
@@ -161,11 +151,10 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 
-app.UseAuthentication(); // Must be before Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 
 app.Run();
-

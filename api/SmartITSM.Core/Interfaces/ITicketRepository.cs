@@ -10,4 +10,8 @@ public interface ITicketRepository
     Task<Ticket> AddAsync(Ticket ticket);
     Task UpdateAsync(Ticket ticket);
     Task DeleteAsync(Ticket ticket);
+    Task<IEnumerable<TicketComment>> GetCommentsAsync(int ticketId);
+    Task<TicketComment> AddCommentAsync(TicketComment comment);
+    Task<AuditLog> AddAuditLogAsync(AuditLog log);
+    Task<IEnumerable<AuditLog>> GetAuditLogsAsync(int ticketId);
 }

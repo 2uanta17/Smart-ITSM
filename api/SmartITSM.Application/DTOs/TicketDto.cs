@@ -16,7 +16,8 @@ public record TicketDto(
     DateTime? ResolvedAt,
     string? AttachmentUrl,
     int? RelatedAssetId,
-    string? AssignedTechName
+    string? AssignedTechName,
+    int? AssignedTechId
 );
 
 public class CreateTicketDto

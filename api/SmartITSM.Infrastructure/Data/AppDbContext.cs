@@ -20,7 +20,10 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     
     public DbSet<Ticket> Tickets { get; set; }
     public DbSet<Category> Categories { get; set; }
+    
     public DbSet<TicketStatus> TicketStatuses { get; set; }
+    public DbSet<TicketComment> TicketComments { get; set; }
+    public DbSet<AuditLog> AuditLogs { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -82,5 +85,29 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             new TicketStatus { Id = 4, Name = "Resolved" },
             new TicketStatus { Id = 5, Name = "Closed" }
         );
+        
+        modelBuilder.Entity<TicketComment>()
+            .HasOne(tc => tc.Ticket)
+            .WithMany()
+            .HasForeignKey(tc => tc.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<TicketComment>()
+            .HasOne(tc => tc.User)
+            .WithMany()
+            .HasForeignKey(tc => tc.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+        
+        modelBuilder.Entity<AuditLog>()
+            .HasOne(al => al.Ticket)
+            .WithMany()
+            .HasForeignKey(al => al.TicketId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<AuditLog>()
+            .HasOne(al => al.User)
+            .WithMany()
+            .HasForeignKey(al => al.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
