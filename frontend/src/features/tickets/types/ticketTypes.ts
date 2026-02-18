@@ -9,6 +9,7 @@ export interface Ticket {
   createdAt: string;
   attachmentUrl?: string;
   assignedTechName?: string;
+  assignedTechId?: number;
 }
 
 export interface CreateTicketPayload {
@@ -17,4 +18,21 @@ export interface CreateTicketPayload {
   priority: string;
   categoryId: string;
   attachment?: File | null;
+}
+
+export interface TicketComment {
+  id: number;
+  ticketId: number;
+  userId: number;
+  userName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface TicketAuditLog {
+  id: number;
+  ticketId: number;
+  action: string;
+  userName: string;
+  timestamp: string;
 }
