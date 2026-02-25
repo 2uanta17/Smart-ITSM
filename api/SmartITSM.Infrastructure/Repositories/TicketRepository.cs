@@ -97,4 +97,57 @@ public class TicketRepository : ITicketRepository
             .OrderByDescending(al => al.Timestamp)
             .ToListAsync();
     }
+
+    public async Task<Dictionary<string, int>> GetStatusCountsAsync(int? requesterId = null)
+    {
+        var query = _context.Tickets.AsQueryable();
+        if (requesterId.HasValue) query = query.Where(t => t.RequesterId == requesterId.Value);
+
+        return await query
+            .GroupBy(t => t.Status!.Name)
+            .Select(g => new { Status = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Status, x => x.Count);
+    }
+
+    public async Task<Dictionary<string, int>> GetCategoryCountsAsync(int? requesterId = null)
+    {
+        var query = _context.Tickets.AsQueryable();
+        if (requesterId.HasValue) query = query.Where(t => t.RequesterId == requesterId.Value);
+
+        return await query
+            .GroupBy(t => t.Category!.Name)
+            .Select(g => new { Category = g.Key, Count = g.Count() })
+            .ToDictionaryAsync(x => x.Category, x => x.Count);
+    }
+
+    public async Task<IEnumerable<AuditLog>> GetRecentActivityAsync(int count, int? userId = null)
+    {
+        var query = _context.AuditLogs
+            .Include(al => al.Ticket)
+            .Include(al => al.User)
+            .AsQueryable();
+
+        if (userId.HasValue) query = query.Where(al => al.Ticket.RequesterId == userId.Value);
+
+        return await query
+            .OrderByDescending(al => al.Timestamp)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<int> GetUnassignedTicketsCountAsync()
+    {
+        return await _context.Tickets
+            .CountAsync(t => t.AssignedTechId == null && t.StatusId != 5);
+    }
+
+    public async Task<IEnumerable<Ticket>> GetUnassignedTicketsAsync(int count)
+    {
+        return await _context.Tickets
+            .Include(t => t.Status)
+            .Where(t => t.AssignedTechId == null && t.StatusId != 5)
+            .OrderBy(t => t.CreatedAt)
+            .Take(count)
+            .ToListAsync();
+    }
 }
