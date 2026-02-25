@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "@/stores/authStore";
 import { getTickets, getMyTickets } from "@/features/tickets/api/ticketApi";
+import { formatLocalDate } from "@/lib/utils";
 
 export const TicketListPage = () => {
   const { user } = useAuthStore();
@@ -32,7 +33,7 @@ export const TicketListPage = () => {
       <Table.Td>
         <Badge color={getStatusColor(t.status)}>{t.status}</Badge>
       </Table.Td>
-      <Table.Td>{new Date(t.createdAt).toLocaleDateString()}</Table.Td>
+      <Table.Td>{formatLocalDate(t.createdAt)}</Table.Td>
     </Table.Tr>
   ));
 

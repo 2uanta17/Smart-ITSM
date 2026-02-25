@@ -1,6 +1,16 @@
+import { getDashboardStats } from "@/features/dashboard/api/dashboardApi";
 import { useAuthStore } from "@/stores/authStore";
-import { AppShell, Group, Burger, Text, NavLink, Button } from "@mantine/core";
+import {
+  AppShell,
+  Badge,
+  Burger,
+  Button,
+  Group,
+  NavLink,
+  Text,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { useQuery } from "@tanstack/react-query";
 import { Link, Outlet, useLocation } from "react-router-dom";
 
 interface NavItem {
@@ -10,24 +20,14 @@ interface NavItem {
 }
 
 const navData: NavItem[] = [
-  {
-    label: "Dashboard",
-    link: "/app/dashboard",
-  },
-  {
-    label: "Tickets",
-    link: "/app/tickets",
-  },
+  { label: "Dashboard", link: "/app/dashboard" },
+  { label: "Tickets", link: "/app/tickets" },
   {
     label: "Departments",
     link: "/app/departments",
     allowedRoles: ["Admin", "Technician"],
   },
-  {
-    label: "Users",
-    link: "/app/users",
-    allowedRoles: ["Admin", "Technician"],
-  },
+  { label: "Users", link: "/app/users", allowedRoles: ["Admin", "Technician"] },
   {
     label: "Assets",
     link: "/app/assets",
@@ -40,12 +40,28 @@ export function MainLayout() {
   const { logout, user } = useAuthStore();
   const location = useLocation();
 
+  const { data: stats } = useQuery({
+    queryKey: ["dashboardStats"],
+    queryFn: getDashboardStats,
+    enabled: !!user,
+    refetchInterval: 30000, 
+  });
+
   const links = navData.map((item) => {
     if (
       item.allowedRoles &&
       (!user || !item.allowedRoles.includes(user.role))
     ) {
       return null;
+    }
+
+    let rightSection = undefined;
+    if (item.label === "Tickets" && stats && stats.openTickets > 0) {
+      rightSection = (
+        <Badge color="red" size="sm" variant="filled" circle>
+          {stats.openTickets}
+        </Badge>
+      );
     }
 
     return (
@@ -56,6 +72,7 @@ export function MainLayout() {
         to={item.link}
         variant="filled"
         fw={500}
+        rightSection={rightSection}
         active={location.pathname.startsWith(item.link)}
         onClick={() => {
           if (opened) toggle();
@@ -67,7 +84,7 @@ export function MainLayout() {
   return (
     <AppShell
       header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: "sm", collapsed: { mobile: !opened } }}
+      navbar={{ width: 250, breakpoint: "sm", collapsed: { mobile: !opened } }}
       padding="md"
     >
       <AppShell.Header>
@@ -82,13 +99,10 @@ export function MainLayout() {
             <Text fw={700}>IT Service Management</Text>
           </Group>
           <Group>
-            <Text size="sm">{user?.email}</Text>
-            <Button
-              size="sm"
-              variant="outline"
-              style={{ cursor: "pointer" }}
-              onClick={logout}
-            >
+            <Text size="sm" visibleFrom="sm">
+              {user?.email}
+            </Text>
+            <Button size="sm" variant="outline" onClick={logout}>
               Logout
             </Button>
           </Group>

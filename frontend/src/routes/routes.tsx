@@ -1,13 +1,14 @@
-import { ProtectedRoute } from "@/routes/guards/ProtectedRoute";
-import { LoginPage } from "@/pages/auth/LoginPage";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { DepartmentsPage } from "@/pages/departments/DepartmentsPage";
-import { UsersPage } from "@/pages/users/UsersPage";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { AssetsPage } from "@/pages/assets/AssetsPage";
+import { LoginPage } from "@/pages/auth/LoginPage";
+import { DashboardPage } from "@/pages/dashboard/DashboardPage";
+import { DepartmentsPage } from "@/pages/departments/DepartmentsPage";
 import { CreateTicketPage } from "@/pages/tickets/CreateTicketPage";
-import { TicketListPage } from "@/pages/tickets/TicketListPage";
 import { TicketDetailPage } from "@/pages/tickets/TicketDetailPage";
+import { TicketListPage } from "@/pages/tickets/TicketListPage";
+import { UsersPage } from "@/pages/users/UsersPage";
+import { ProtectedRoute } from "@/routes/guards/ProtectedRoute";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 export const AppRoutes = () => {
   return (
@@ -16,7 +17,7 @@ export const AppRoutes = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/app" element={<MainLayout />}>
-          <Route path="dashboard" element={<div>Dashboard</div>} />
+          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="tickets" element={<TicketListPage />} />
           <Route path="tickets/create" element={<CreateTicketPage />} />
           <Route path="tickets/:id" element={<TicketDetailPage />} />

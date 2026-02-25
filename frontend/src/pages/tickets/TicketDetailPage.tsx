@@ -7,7 +7,7 @@ import {
   resolveTicket,
   takeTicket,
 } from "@/features/tickets/api/ticketApi";
-import { getErrorMessage } from "@/lib/utils";
+import { formatLocalTime, getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
   Avatar,
@@ -257,7 +257,9 @@ export const TicketDetailPage = () => {
                             mt={4}
                           >
                             {new Date(
-                              comment.createdAt + "Z",
+                              comment.createdAt.endsWith("Z")
+                                ? comment.createdAt
+                                : comment.createdAt + "Z",
                             ).toLocaleTimeString([], {
                               hour: "2-digit",
                               minute: "2-digit",
@@ -305,8 +307,7 @@ export const TicketDetailPage = () => {
                   {history.map((log) => (
                     <Timeline.Item key={log.id} title={log.action}>
                       <Text c="dimmed" size="sm">
-                        {log.userName} at{" "}
-                        {new Date(log.timestamp + "Z").toLocaleString()}
+                        {log.userName} at {formatLocalTime(log.timestamp)}
                       </Text>
                     </Timeline.Item>
                   ))}
