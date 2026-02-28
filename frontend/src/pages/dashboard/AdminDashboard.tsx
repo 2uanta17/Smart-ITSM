@@ -56,14 +56,14 @@ export const AdminDashboard = () => {
       <Grid>
         {[1, 2, 3, 4].map((i) => (
           <Grid.Col span={{ base: 12, sm: 3 }} key={i}>
-            <Skeleton height={120} radius="md" />
+            <Skeleton height={120} radius="xs" />
           </Grid.Col>
         ))}
         <Grid.Col span={6}>
-          <Skeleton height={300} radius="md" />
+          <Skeleton height={300} radius="xs" />
         </Grid.Col>
         <Grid.Col span={6}>
-          <Skeleton height={300} radius="md" />
+          <Skeleton height={300} radius="xs" />
         </Grid.Col>
       </Grid>
     );
@@ -85,7 +85,7 @@ export const AdminDashboard = () => {
 
       <Grid mb="xl">
         <Grid.Col span={{ base: 12, sm: 3 }}>
-          <Card padding="lg" radius="md" withBorder bg="blue.1">
+          <Card padding="lg" radius="xs" withBorder bg="blue.1">
             <Text c="blue.9" tt="uppercase" fw={700} size="xs">
               Total Tickets
             </Text>
@@ -95,7 +95,7 @@ export const AdminDashboard = () => {
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 3 }}>
-          <Card padding="lg" radius="md" withBorder bg="red.1">
+          <Card padding="lg" radius="xs" withBorder bg="red.1">
             <Text c="red.9" tt="uppercase" fw={700} size="xs">
               Open Tickets
             </Text>
@@ -105,7 +105,7 @@ export const AdminDashboard = () => {
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 3 }}>
-          <Card padding="lg" radius="md" withBorder bg="yellow.1">
+          <Card padding="lg" radius="xs" withBorder bg="yellow.1">
             <Text c="yellow.9" tt="uppercase" fw={700} size="xs">
               In Progress
             </Text>
@@ -115,7 +115,7 @@ export const AdminDashboard = () => {
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 3 }}>
-          <Card padding="lg" radius="md" withBorder bg="green.1">
+          <Card padding="lg" radius="xs" withBorder bg="green.1">
             <Text c="green.9" tt="uppercase" fw={700} size="xs">
               Resolved
             </Text>
@@ -128,7 +128,7 @@ export const AdminDashboard = () => {
 
       <Grid>
         <Grid.Col span={{ base: 12, md: 5 }}>
-          <Paper withBorder p="md" radius="md" h="100%">
+          <Paper withBorder p="md" radius="xs" h="100%">
             <Title order={4} mb="xl">
               Tickets by Category
             </Title>
@@ -150,7 +150,7 @@ export const AdminDashboard = () => {
         </Grid.Col>
 
         <Grid.Col span={{ base: 12, md: 7 }}>
-          <Paper withBorder p="md" radius="md" h="100%">
+          <Paper withBorder p="md" radius="xs" h="100%">
             <Group justify="space-between" mb="md">
               <Title order={4}>Action Required</Title>
               <Badge color="red" variant="light">

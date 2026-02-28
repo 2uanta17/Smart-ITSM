@@ -33,13 +33,13 @@ export const RequesterDashboard = () => {
     return (
       <Grid>
         <Grid.Col span={6}>
-          <Skeleton height={120} radius="md" />
+          <Skeleton height={120} radius="xs" />
         </Grid.Col>
         <Grid.Col span={6}>
-          <Skeleton height={120} radius="md" />
+          <Skeleton height={120} radius="xs" />
         </Grid.Col>
         <Grid.Col span={12}>
-          <Skeleton height={300} radius="md" />
+          <Skeleton height={300} radius="xs" />
         </Grid.Col>
       </Grid>
     );
@@ -61,7 +61,7 @@ export const RequesterDashboard = () => {
 
       <Grid mb="xl">
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Card padding="lg" radius="md" withBorder bg="red.1">
+          <Card padding="lg" radius="xs" withBorder bg="red.1">
             <Text c="red.9" tt="uppercase" fw={700} size="xs">
               My Open Tickets
             </Text>
@@ -71,7 +71,7 @@ export const RequesterDashboard = () => {
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Card padding="lg" radius="md" withBorder bg="yellow.1">
+          <Card padding="lg" radius="xs" withBorder bg="yellow.1">
             <Text c="yellow.9" tt="uppercase" fw={700} size="xs">
               Tickets In Progress
             </Text>
@@ -82,7 +82,7 @@ export const RequesterDashboard = () => {
         </Grid.Col>
       </Grid>
 
-      <Paper withBorder p="md" radius="md">
+      <Paper withBorder p="md" radius="xs">
         <Title order={4} mb="xl">
           Recent Updates
         </Title>
