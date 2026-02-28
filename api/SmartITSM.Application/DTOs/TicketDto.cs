@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 using SmartITSM.Core.Enums;
 
 namespace SmartITSM.Application.DTOs;
@@ -17,24 +17,25 @@ public record TicketDto(
     string? AttachmentUrl,
     int? RelatedAssetId,
     string? AssignedTechName,
-    int? AssignedTechId
+    int? AssignedTechId,
+    DateTime? DueDate
 );
 
 public class CreateTicketDto
 {
     [Required]
     public string Title { get; set; } = string.Empty;
-    
+
     [Required]
     public string Description { get; set; } = string.Empty;
-    
+
     [Required]
     public TicketPriority Priority { get; set; }
-    
+
     [Required]
     public int CategoryId { get; set; }
-    
+
     public int? RelatedAssetId { get; set; }
-    
+
     public IFormFile? Attachment { get; set; }
 }

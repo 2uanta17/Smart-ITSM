@@ -65,8 +65,7 @@ builder.Services.AddOpenApi(options =>
                 {
                     Reference = new OpenApiReference
                     {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer"
+                        Type = ReferenceType.SecurityScheme, Id = "Bearer"
                     }
                 },
                 Array.Empty<string>()
@@ -95,6 +94,10 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITicketService, TicketService>();
 
+builder.Services.AddScoped<ISlaPolicyRepository, SlaPolicyRepository>();
+builder.Services.AddScoped<IApprovalRequestRepository, ApprovalRequestRepository>();
+builder.Services.AddScoped<IApprovalService, ApprovalService>();
+
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 var jwtKey = builder.Configuration["JwtSettings:Key"];
@@ -120,8 +123,8 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
         ValidAudience = jwtAudience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)), ClockSkew = TimeSpan.Zero,
-
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)),
+        ClockSkew = TimeSpan.Zero,
         RoleClaimType = "role",
         NameClaimType = JwtRegisteredClaimNames.Sub
     };

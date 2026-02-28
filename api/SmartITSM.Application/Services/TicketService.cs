@@ -1,24 +1,31 @@
 ﻿using SmartITSM.Application.DTOs;
 using SmartITSM.Application.Interfaces;
 using SmartITSM.Core.Entities;
+using SmartITSM.Core.Enums;
 using SmartITSM.Core.Interfaces;
 
 namespace SmartITSM.Application.Services;
 
 public class TicketService : ITicketService
 {
+    private readonly IApprovalRequestRepository _approvalRepo;
+    private readonly ICategoryRepository _categoryRepo;
     private readonly ITicketRepository _repository;
+    private readonly ISlaPolicyRepository _slaPolicyRepo;
 
-    public TicketService(ITicketRepository repository)
+    public TicketService(ITicketRepository repository, ISlaPolicyRepository slaPolicyRepo,
+        ICategoryRepository categoryRepo, IApprovalRequestRepository approvalRepo)
     {
         _repository = repository;
+        _slaPolicyRepo = slaPolicyRepo;
+        _categoryRepo = categoryRepo;
+        _approvalRepo = approvalRepo;
     }
 
     public async Task<TicketDto> CreateAsync(CreateTicketDto dto, int requesterId)
     {
         string? attachmentFileName = null;
 
-        // File Handling
         if (dto.Attachment != null && dto.Attachment.Length > 0)
         {
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
@@ -44,13 +51,28 @@ public class TicketService : ITicketService
             RelatedAssetId = dto.RelatedAssetId,
             RequesterId = requesterId,
             AttachmentPath = attachmentFileName,
-            StatusId = 1, // Default to 'Open'
             CreatedAt = DateTime.UtcNow
         };
 
+        // SLA Deadline Calculation
+        var slaPolicy = await _slaPolicyRepo.GetByPriorityAsync(dto.Priority);
+        if (slaPolicy != null) ticket.DueDate = DateTime.UtcNow.AddHours(slaPolicy.MaxResolveHours);
+
+        var category = await _categoryRepo.GetByIdAsync(dto.CategoryId);
+        var requiresApproval = category?.RequiresApproval == true;
+
+        ticket.StatusId = requiresApproval ? 6 : 1; // 6 = Pending Approval, 1 = Open
+
         var created = await _repository.AddAsync(ticket);
 
-        // Re-fetch to get includes (Category, Requester) for the DTO
+        if (requiresApproval)
+        {
+            await _approvalRepo.AddAsync(new ApprovalRequest
+            {
+                TicketId = created.Id, ApproverId = 1, Status = ApprovalStatus.Pending, CreatedAt = DateTime.UtcNow
+            });
+        }
+
         var fullTicket = await _repository.GetByIdAsync(created.Id);
         return MapToDto(fullTicket!);
     }
@@ -87,14 +109,11 @@ public class TicketService : ITicketService
 
         var comment = new TicketComment
         {
-            TicketId = ticketId,
-            UserId = userId,
-            Content = dto.Content,
-            CreatedAt = DateTime.UtcNow
+            TicketId = ticketId, UserId = userId, Content = dto.Content, CreatedAt = DateTime.UtcNow
         };
 
         var created = await _repository.AddCommentAsync(comment);
-        
+
         var fetchedComments = await _repository.GetCommentsAsync(ticketId);
         var fullComment = fetchedComments.First(c => c.Id == created.Id);
 
@@ -106,7 +125,7 @@ public class TicketService : ITicketService
     {
         var ticket = await _repository.GetByIdAsync(ticketId);
         if (ticket == null) return false;
-        
+
         ticket.AssignedTechId = technicianId;
         ticket.StatusId = 3;
 
@@ -127,17 +146,14 @@ public class TicketService : ITicketService
         var ticket = await _repository.GetByIdAsync(ticketId);
         if (ticket == null || ticket.AssignedTechId != technicianId)
             return false;
-        
+
         ticket.StatusId = 4;
         ticket.ResolvedAt = DateTime.UtcNow;
 
         await _repository.UpdateAsync(ticket);
         await _repository.AddAuditLogAsync(new AuditLog
         {
-            TicketId = ticketId,
-            UserId = technicianId,
-            Action = "Ticket resolved",
-            Timestamp = DateTime.UtcNow
+            TicketId = ticketId, UserId = technicianId, Action = "Ticket resolved", Timestamp = DateTime.UtcNow
         });
 
         return true;
@@ -147,7 +163,7 @@ public class TicketService : ITicketService
     {
         var ticket = await _repository.GetByIdAsync(ticketId);
         if (ticket == null || ticket.RequesterId != requesterId) return false;
-        
+
         ticket.StatusId = 5;
 
         await _repository.UpdateAsync(ticket);
@@ -184,7 +200,8 @@ public class TicketService : ITicketService
             !string.IsNullOrEmpty(ticket.AttachmentPath) ? $"/uploads/{ticket.AttachmentPath}" : null,
             ticket.RelatedAssetId,
             ticket.AssignedTech?.FullName,
-            ticket.AssignedTechId
+            ticket.AssignedTechId,
+            ticket.DueDate
         );
     }
 }
