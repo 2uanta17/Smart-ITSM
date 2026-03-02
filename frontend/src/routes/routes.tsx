@@ -1,4 +1,5 @@
 import { MainLayout } from "@/components/layout/MainLayout";
+import { ApprovalsPage } from "@/pages/approvals/ApprovalsPage";
 import { AssetsPage } from "@/pages/assets/AssetsPage";
 import { LoginPage } from "@/pages/auth/LoginPage";
 import { DashboardPage } from "@/pages/dashboard/DashboardPage";
@@ -24,6 +25,7 @@ export const AppRoutes = () => {
           <Route
             element={<ProtectedRoute allowedRoles={["Admin", "Technician"]} />}
           >
+            <Route path="approvals" element={<ApprovalsPage />} />
             <Route path="departments" element={<DepartmentsPage />} />
             <Route path="users" element={<UsersPage />} />
             <Route path="assets" element={<AssetsPage />} />

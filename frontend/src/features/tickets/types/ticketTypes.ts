@@ -10,6 +10,7 @@ export interface Ticket {
   attachmentUrl?: string;
   assignedTechName?: string;
   assignedTechId?: number;
+  dueDate?: string | null;
 }
 
 export interface CreateTicketPayload {

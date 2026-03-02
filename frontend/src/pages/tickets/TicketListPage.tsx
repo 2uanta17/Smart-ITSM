@@ -1,9 +1,9 @@
-import { Table, Button, Group, Title, Paper, Badge, LoadingOverlay } from "@mantine/core";
-import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { useAuthStore } from "@/stores/authStore";
-import { getTickets, getMyTickets } from "@/features/tickets/api/ticketApi";
+import { getMyTickets, getTickets } from "@/features/tickets/api/ticketApi";
 import { formatLocalDate } from "@/lib/utils";
+import { useAuthStore } from "@/stores/authStore";
+import { Badge, Button, Group, LoadingOverlay, Paper, Table, Title } from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 
 export const TicketListPage = () => {
   const { user } = useAuthStore();
@@ -34,6 +34,7 @@ export const TicketListPage = () => {
         <Badge color={getStatusColor(t.status)}>{t.status}</Badge>
       </Table.Td>
       <Table.Td>{formatLocalDate(t.createdAt)}</Table.Td>
+      <Table.Td>{t.dueDate ? formatLocalDate(t.dueDate) : "N/A"}</Table.Td>
     </Table.Tr>
   ));
 
@@ -54,6 +55,7 @@ export const TicketListPage = () => {
               <Table.Th>Category</Table.Th>
               <Table.Th>Status</Table.Th>
               <Table.Th>Created</Table.Th>
+              <Table.Th>Due Date</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>

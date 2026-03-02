@@ -23,6 +23,11 @@ const navData: NavItem[] = [
   { label: "Dashboard", link: "/app/dashboard" },
   { label: "Tickets", link: "/app/tickets" },
   {
+    label: "My Approvals",
+    link: "/app/approvals",
+    allowedRoles: ["Admin", "Technician"],
+  },
+  {
     label: "Departments",
     link: "/app/departments",
     allowedRoles: ["Admin", "Technician"],
@@ -44,7 +49,7 @@ export function MainLayout() {
     queryKey: ["dashboardStats"],
     queryFn: getDashboardStats,
     enabled: !!user,
-    refetchInterval: 30000, 
+    refetchInterval: 30000,
   });
 
   const links = navData.map((item) => {
