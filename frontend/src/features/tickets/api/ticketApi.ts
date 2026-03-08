@@ -64,3 +64,10 @@ export const getTicketHistory = async (id: number) => {
   const { data } = await api.get<TicketAuditLog[]>(`/tickets/${id}/history`);
   return data;
 };
+
+export const exportTicketsCsv = async () => {
+  const { data } = await api.get("/reports/tickets/export", {
+    responseType: "blob",
+  });
+  return data;
+};

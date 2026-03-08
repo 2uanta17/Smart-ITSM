@@ -1,32 +1,80 @@
-import { getMyTickets, getTickets } from "@/features/tickets/api/ticketApi";
+import {
+  exportTicketsCsv,
+  getMyTickets,
+  getTickets,
+} from "@/features/tickets/api/ticketApi";
 import { formatLocalDate } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
-import { Badge, Button, Group, LoadingOverlay, Paper, Table, Title } from "@mantine/core";
-import { useQuery } from "@tanstack/react-query";
+import {
+  Badge,
+  Button,
+  Group,
+  LoadingOverlay,
+  Paper,
+  Table,
+  Title,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
 export const TicketListPage = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
-  
+
   const isStaff = user?.role === "Admin" || user?.role === "Technician";
 
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ["tickets"],
-    queryFn: isStaff ? getTickets : getMyTickets
+    queryFn: isStaff ? getTickets : getMyTickets,
+  });
+
+  const exportMutation = useMutation({
+    mutationFn: exportTicketsCsv,
+    onSuccess: (data) => {
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "tickets_report.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      notifications.show({
+        title: "Export Successful",
+        message: "The ticket report has been downloaded to your device.",
+        color: "green",
+      });
+    },
+    onError: () => {
+      notifications.show({
+        title: "Export Failed",
+        message: "There was an error generating the CSV report.",
+        color: "red",
+      });
+    },
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Open": return "green";
-      case "Resolved": return "blue";
-      case "Closed": return "gray";
-      default: return "yellow";
+      case "Open":
+        return "green";
+      case "Resolved":
+        return "blue";
+      case "Closed":
+        return "gray";
+      default:
+        return "yellow";
     }
   };
 
   const rows = tickets.map((t) => (
-    <Table.Tr key={t.id} style={{ cursor: "pointer" }} onClick={() => navigate(`/app/tickets/${t.id}`)}>
+    <Table.Tr
+      key={t.id}
+      style={{ cursor: "pointer" }}
+      onClick={() => navigate(`/app/tickets/${t.id}`)}
+    >
       <Table.Td>#{t.id}</Table.Td>
       <Table.Td>{t.title}</Table.Td>
       <Table.Td>{t.categoryName}</Table.Td>
@@ -42,7 +90,21 @@ export const TicketListPage = () => {
     <div>
       <Group justify="space-between" mb="lg">
         <Title order={2}>Tickets</Title>
-        <Button onClick={() => navigate("/app/tickets/create")}>New Ticket</Button>
+        <Group>
+          {user?.role === "Admin" && (
+            <Button
+              variant="outline"
+              color="gray"
+              onClick={() => exportMutation.mutate()}
+              loading={exportMutation.isPending}
+            >
+              Export to Excel
+            </Button>
+          )}
+          <Button onClick={() => navigate("/app/tickets/create")}>
+            New Ticket
+          </Button>
+        </Group>
       </Group>
 
       <Paper p="xs" withBorder pos="relative">
