@@ -13,6 +13,7 @@ using SmartITSM.Core.Interfaces;
 using SmartITSM.Infrastructure.Data;
 using SmartITSM.Infrastructure.Identity;
 using SmartITSM.Infrastructure.Repositories;
+using SmartITSM.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,6 +100,9 @@ builder.Services.AddScoped<IApprovalRequestRepository, ApprovalRequestRepository
 builder.Services.AddScoped<IApprovalService, ApprovalService>();
 
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IReportService, ReportService>();
 
 var jwtKey = builder.Configuration["JwtSettings:Key"];
 var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];

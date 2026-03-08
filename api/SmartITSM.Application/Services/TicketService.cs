@@ -1,5 +1,6 @@
 ﻿using SmartITSM.Application.DTOs;
 using SmartITSM.Application.Interfaces;
+using SmartITSM.Core.Constants;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
 using SmartITSM.Core.Interfaces;
@@ -12,14 +13,23 @@ public class TicketService : ITicketService
     private readonly ICategoryRepository _categoryRepo;
     private readonly ITicketRepository _repository;
     private readonly ISlaPolicyRepository _slaPolicyRepo;
+    private readonly IEmailService _emailService;
+    private readonly IUserRepository _userRepository;
 
-    public TicketService(ITicketRepository repository, ISlaPolicyRepository slaPolicyRepo,
-        ICategoryRepository categoryRepo, IApprovalRequestRepository approvalRepo)
+    public TicketService(
+        ITicketRepository repository,
+        ISlaPolicyRepository slaPolicyRepo,
+        ICategoryRepository categoryRepo,
+        IApprovalRequestRepository approvalRepo,
+        IEmailService emailService,
+        IUserRepository userRepository)
     {
         _repository = repository;
         _slaPolicyRepo = slaPolicyRepo;
         _categoryRepo = categoryRepo;
         _approvalRepo = approvalRepo;
+        _emailService = emailService;
+        _userRepository = userRepository;
     }
 
     public async Task<TicketDto> CreateAsync(CreateTicketDto dto, int requesterId)
@@ -28,13 +38,16 @@ public class TicketService : ITicketService
 
         if (dto.Attachment != null && dto.Attachment.Length > 0)
         {
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+            string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+            if (!Directory.Exists(uploadsFolder))
+            {
+                Directory.CreateDirectory(uploadsFolder);
+            }
 
-            var uniqueFileName = Guid.NewGuid() + Path.GetExtension(dto.Attachment.FileName);
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            string uniqueFileName = Guid.NewGuid() + Path.GetExtension(dto.Attachment.FileName);
+            string filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            using (FileStream fileStream = new(filePath, FileMode.Create))
             {
                 await dto.Attachment.CopyToAsync(fileStream);
             }
@@ -42,7 +55,7 @@ public class TicketService : ITicketService
             attachmentFileName = uniqueFileName;
         }
 
-        var ticket = new Ticket
+        Ticket ticket = new()
         {
             Title = dto.Title,
             Description = dto.Description,
@@ -54,68 +67,117 @@ public class TicketService : ITicketService
             CreatedAt = DateTime.UtcNow
         };
 
-        // SLA Deadline Calculation
-        var slaPolicy = await _slaPolicyRepo.GetByPriorityAsync(dto.Priority);
-        if (slaPolicy != null) ticket.DueDate = DateTime.UtcNow.AddHours(slaPolicy.MaxResolveHours);
+        SlaPolicy? slaPolicy = await _slaPolicyRepo.GetByPriorityAsync(dto.Priority);
+        if (slaPolicy != null)
+        {
+            ticket.DueDate = DateTime.UtcNow.AddHours(slaPolicy.MaxResolveHours);
+        }
 
-        var category = await _categoryRepo.GetByIdAsync(dto.CategoryId);
-        var requiresApproval = category?.RequiresApproval == true;
+        Category? category = await _categoryRepo.GetByIdAsync(dto.CategoryId);
+        bool requiresApproval = category?.RequiresApproval == true;
 
-        ticket.StatusId = requiresApproval ? 6 : 1; // 6 = Pending Approval, 1 = Open
+        ticket.StatusId = requiresApproval ? TicketStatusIds.PendingApproval : TicketStatusIds.Open;
 
-        var created = await _repository.AddAsync(ticket);
+        Ticket created = await _repository.AddAsync(ticket);
+        Ticket? fullTicket = await _repository.GetByIdAsync(created.Id);
+
+        if (fullTicket?.Requester?.Email != null)
+        {
+            try
+            {
+                string subject = $"Ticket #{created.Id} Created: {created.Title}";
+                string body = $@"<p>Your ticket has been successfully created.</p>
+                              <p><strong>Description:</strong> {created.Description}</p>
+                              <p>View it here: <a href='http://localhost:5173/tickets/{created.Id}'>http://localhost:5173/tickets/{created.Id}</a></p>";
+
+                await _emailService.SendEmailAsync(fullTicket.Requester.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Email sending failed: {ex.Message}");
+            }
+        }
 
         if (requiresApproval)
         {
-            await _approvalRepo.AddAsync(new ApprovalRequest
+            IEnumerable<User> admins = await _userRepository.GetUsersByRoleAsync(AppRoles.Admin);
+            User? approver = admins.FirstOrDefault();
+
+            if (approver != null)
             {
-                TicketId = created.Id, ApproverId = 1, Status = ApprovalStatus.Pending, CreatedAt = DateTime.UtcNow
-            });
+                await _approvalRepo.AddAsync(new ApprovalRequest
+                {
+                    TicketId = created.Id,
+                    ApproverId = approver.Id,
+                    Status = ApprovalStatus.Pending,
+                    CreatedAt = DateTime.UtcNow
+                });
+
+                if (approver.Email != null)
+                {
+                    try
+                    {
+                        // Delay to prevent Mailtrap rate-limiting
+                        await Task.Delay(1000);
+
+                        await _emailService.SendEmailAsync(
+                            approver.Email,
+                            $"Action Required: Approve {category?.Name} Request",
+                            $"<p>Ticket #{created.Id} requires your approval.</p>");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Approval Email sending failed: {ex.Message}");
+                    }
+                }
+            }
         }
 
-        var fullTicket = await _repository.GetByIdAsync(created.Id);
         return MapToDto(fullTicket!);
     }
 
     public async Task<IEnumerable<TicketDto>> GetAllAsync()
     {
-        var tickets = await _repository.GetAllAsync();
+        IEnumerable<Ticket> tickets = await _repository.GetAllAsync();
         return tickets.Select(MapToDto);
     }
 
     public async Task<IEnumerable<TicketDto>> GetMyTicketsAsync(int userId)
     {
-        var tickets = await _repository.GetByRequesterIdAsync(userId);
+        IEnumerable<Ticket> tickets = await _repository.GetByRequesterIdAsync(userId);
         return tickets.Select(MapToDto);
     }
 
     public async Task<TicketDto?> GetByIdAsync(int id)
     {
-        var ticket = await _repository.GetByIdAsync(id);
+        Ticket? ticket = await _repository.GetByIdAsync(id);
         return ticket == null ? null : MapToDto(ticket);
     }
 
     public async Task<IEnumerable<TicketCommentDto>> GetCommentsAsync(int ticketId)
     {
-        var comments = await _repository.GetCommentsAsync(ticketId);
+        IEnumerable<TicketComment> comments = await _repository.GetCommentsAsync(ticketId);
         return comments.Select(c => new TicketCommentDto(
             c.Id, c.TicketId, c.UserId, c.User.FullName, c.Content, c.CreatedAt));
     }
 
     public async Task<TicketCommentDto?> AddCommentAsync(int ticketId, int userId, CreateTicketCommentDto dto)
     {
-        var ticket = await _repository.GetByIdAsync(ticketId);
-        if (ticket == null) return null;
+        Ticket? ticket = await _repository.GetByIdAsync(ticketId);
+        if (ticket == null)
+        {
+            return null;
+        }
 
-        var comment = new TicketComment
+        TicketComment comment = new()
         {
             TicketId = ticketId, UserId = userId, Content = dto.Content, CreatedAt = DateTime.UtcNow
         };
 
-        var created = await _repository.AddCommentAsync(comment);
+        TicketComment created = await _repository.AddCommentAsync(comment);
 
-        var fetchedComments = await _repository.GetCommentsAsync(ticketId);
-        var fullComment = fetchedComments.First(c => c.Id == created.Id);
+        IEnumerable<TicketComment> fetchedComments = await _repository.GetCommentsAsync(ticketId);
+        TicketComment fullComment = fetchedComments.First(c => c.Id == created.Id);
 
         return new TicketCommentDto(fullComment.Id, fullComment.TicketId, fullComment.UserId, fullComment.User.FullName,
             fullComment.Content, fullComment.CreatedAt);
@@ -123,11 +185,14 @@ public class TicketService : ITicketService
 
     public async Task<bool> TakeTicketAsync(int ticketId, int technicianId)
     {
-        var ticket = await _repository.GetByIdAsync(ticketId);
-        if (ticket == null) return false;
+        Ticket? ticket = await _repository.GetByIdAsync(ticketId);
+        if (ticket == null)
+        {
+            return false;
+        }
 
         ticket.AssignedTechId = technicianId;
-        ticket.StatusId = 3;
+        ticket.StatusId = TicketStatusIds.InProgress;
 
         await _repository.UpdateAsync(ticket);
         await _repository.AddAuditLogAsync(new AuditLog
@@ -143,11 +208,13 @@ public class TicketService : ITicketService
 
     public async Task<bool> ResolveTicketAsync(int ticketId, int technicianId)
     {
-        var ticket = await _repository.GetByIdAsync(ticketId);
+        Ticket? ticket = await _repository.GetByIdAsync(ticketId);
         if (ticket == null || ticket.AssignedTechId != technicianId)
+        {
             return false;
+        }
 
-        ticket.StatusId = 4;
+        ticket.StatusId = TicketStatusIds.Resolved;
         ticket.ResolvedAt = DateTime.UtcNow;
 
         await _repository.UpdateAsync(ticket);
@@ -156,15 +223,33 @@ public class TicketService : ITicketService
             TicketId = ticketId, UserId = technicianId, Action = "Ticket resolved", Timestamp = DateTime.UtcNow
         });
 
+        if (ticket.Requester?.Email != null)
+        {
+            try
+            {
+                await _emailService.SendEmailAsync(
+                    ticket.Requester.Email,
+                    $"Your ticket #{ticketId} has been resolved.",
+                    $"<p>Your ticket '{ticket.Title}' has been successfully resolved.</p>");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Resolution Email failed: {ex.Message}");
+            }
+        }
+
         return true;
     }
 
     public async Task<bool> CancelTicketAsync(int ticketId, int requesterId)
     {
-        var ticket = await _repository.GetByIdAsync(ticketId);
-        if (ticket == null || ticket.RequesterId != requesterId) return false;
+        Ticket? ticket = await _repository.GetByIdAsync(ticketId);
+        if (ticket == null || ticket.RequesterId != requesterId)
+        {
+            return false;
+        }
 
-        ticket.StatusId = 5;
+        ticket.StatusId = TicketStatusIds.Cancelled;
 
         await _repository.UpdateAsync(ticket);
         await _repository.AddAuditLogAsync(new AuditLog
@@ -180,7 +265,7 @@ public class TicketService : ITicketService
 
     public async Task<IEnumerable<AuditLogDto>> GetHistoryAsync(int ticketId)
     {
-        var logs = await _repository.GetAuditLogsAsync(ticketId);
+        IEnumerable<AuditLog> logs = await _repository.GetAuditLogsAsync(ticketId);
         return logs.Select(l => new AuditLogDto(
             l.Id, l.TicketId, l.Action, l.User.FullName, l.Timestamp));
     }
