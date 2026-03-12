@@ -1,11 +1,20 @@
+using Microsoft.AspNetCore.SignalR;
+
+using SmartITSM.API.Hubs;
+using SmartITSM.API.Providers;
+using SmartITSM.API.Services;
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
+
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+
 using SmartITSM.Application.Interfaces;
 using SmartITSM.Application.Services;
 using SmartITSM.Core.Entities;
@@ -15,7 +24,7 @@ using SmartITSM.Infrastructure.Identity;
 using SmartITSM.Infrastructure.Repositories;
 using SmartITSM.Infrastructure.Services;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
@@ -46,7 +55,7 @@ builder.Services.AddOpenApi(options =>
 {
     options.AddDocumentTransformer((document, context, cancellationToken) =>
     {
-        var securityScheme = new OpenApiSecurityScheme
+        OpenApiSecurityScheme securityScheme = new()
         {
             Name = "Authorization",
             Description = "Enter your JWT Token",
@@ -64,10 +73,7 @@ builder.Services.AddOpenApi(options =>
             {
                 new OpenApiSecurityScheme
                 {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme, Id = "Bearer"
-                    }
+                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
                 },
                 Array.Empty<string>()
             }
@@ -104,9 +110,9 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 
-var jwtKey = builder.Configuration["JwtSettings:Key"];
-var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
-var jwtAudience = builder.Configuration["JwtSettings:Audience"];
+string? jwtKey = builder.Configuration["JwtSettings:Key"];
+string? jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
+string? jwtAudience = builder.Configuration["JwtSettings:Audience"];
 
 builder.Services.AddAuthentication(options =>
 {
@@ -132,12 +138,34 @@ builder.Services.AddAuthentication(options =>
         RoleClaimType = "role",
         NameClaimType = JwtRegisteredClaimNames.Sub
     };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            StringValues accessToken = context.Request.Query["access_token"];
+            PathString path = context.HttpContext.Request.Path;
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
+            {
+                context.Token = accessToken;
+            }
+
+            return Task.CompletedTask;
+        }
+    };
 });
 
-var app = builder.Build();
+builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSignalR();
 
-var uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
-if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
+WebApplication app = builder.Build();
+
+string uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
 
 if (app.Environment.IsDevelopment())
 {
@@ -166,4 +194,5 @@ app.UseAuthorization();
 app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 
+app.MapHub<NotificationHub>("/hubs/notifications");
 app.Run();

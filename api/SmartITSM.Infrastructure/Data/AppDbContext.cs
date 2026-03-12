@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+
 using SmartITSM.Core.Constants;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
@@ -26,6 +27,7 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
     public DbSet<AuditLog> AuditLogs { get; set; }
     public DbSet<SlaPolicy> SlaPolicies { get; set; }
     public DbSet<ApprovalRequest> ApprovalRequests { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -34,32 +36,23 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         modelBuilder.Entity<User>().ToTable("Users");
         modelBuilder.Entity<IdentityRole<int>>().ToTable("Roles");
         modelBuilder.Entity<Department>().HasData(
-            new Department
-            {
-                Id = 1, Name = "IT Support", LocationCode = "HQ-L1"
-            }
+            new Department { Id = 1, Name = "IT Support", LocationCode = "HQ-L1" }
         );
         modelBuilder.Entity<Asset>()
             .Property(a => a.Status)
             .HasConversion<string>();
 
         modelBuilder.Entity<IdentityRole<int>>().HasData(
-            new IdentityRole<int>
-            {
-                Id = 1, Name = AppRoles.Admin, NormalizedName = AppRoles.Admin.ToUpper()
-            },
+            new IdentityRole<int> { Id = 1, Name = AppRoles.Admin, NormalizedName = AppRoles.Admin.ToUpper() },
             new IdentityRole<int>
             {
                 Id = 2, Name = AppRoles.Technician, NormalizedName = AppRoles.Technician.ToUpper()
             },
-            new IdentityRole<int>
-            {
-                Id = 3, Name = AppRoles.Requester, NormalizedName = AppRoles.Requester.ToUpper()
-            }
+            new IdentityRole<int> { Id = 3, Name = AppRoles.Requester, NormalizedName = AppRoles.Requester.ToUpper() }
         );
 
-        var hasher = new PasswordHasher<User>();
-        var admin = new User
+        PasswordHasher<User> hasher = new();
+        User admin = new()
         {
             Id = 1,
             UserName = "admin@mail.com",
@@ -76,71 +69,29 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
         modelBuilder.Entity<User>().HasData(admin);
 
         modelBuilder.Entity<IdentityUserRole<int>>().HasData(
-            new IdentityUserRole<int>
-            {
-                RoleId = 1, UserId = 1
-            }
+            new IdentityUserRole<int> { RoleId = 1, UserId = 1 }
         );
 
         modelBuilder.Entity<AssetType>().HasData(
-            new AssetType
-            {
-                Id = 1, Name = "Laptop"
-            },
-            new AssetType
-            {
-                Id = 2, Name = "Desktop"
-            },
-            new AssetType
-            {
-                Id = 3, Name = "Printer"
-            },
-            new AssetType
-            {
-                Id = 4, Name = "Server"
-            }
+            new AssetType { Id = 1, Name = "Laptop" },
+            new AssetType { Id = 2, Name = "Desktop" },
+            new AssetType { Id = 3, Name = "Printer" },
+            new AssetType { Id = 4, Name = "Server" }
         );
 
         modelBuilder.Entity<Category>().HasData(
-            new Category
-            {
-                Id = 1, Name = "Hardware", DefaultPriority = "Medium", RequiresApproval = true
-            },
-            new Category
-            {
-                Id = 2, Name = "Software", DefaultPriority = "Low", RequiresApproval = false
-            },
-            new Category
-            {
-                Id = 3, Name = "Network", DefaultPriority = "High", RequiresApproval = false
-            }
+            new Category { Id = 1, Name = "Hardware", DefaultPriority = "Medium", RequiresApproval = true },
+            new Category { Id = 2, Name = "Software", DefaultPriority = "Low", RequiresApproval = false },
+            new Category { Id = 3, Name = "Network", DefaultPriority = "High", RequiresApproval = false }
         );
 
         modelBuilder.Entity<TicketStatus>().HasData(
-            new TicketStatus
-            {
-                Id = 1, Name = "Open"
-            },
-            new TicketStatus
-            {
-                Id = 2, Name = "Pending"
-            },
-            new TicketStatus
-            {
-                Id = 3, Name = "In Progress"
-            },
-            new TicketStatus
-            {
-                Id = 4, Name = "Resolved"
-            },
-            new TicketStatus
-            {
-                Id = 5, Name = "Closed"
-            },
-            new TicketStatus
-            {
-                Id = 6, Name = "Pending Approval"
-            } // NEW
+            new TicketStatus { Id = 1, Name = "Open" },
+            new TicketStatus { Id = 2, Name = "Pending" },
+            new TicketStatus { Id = 3, Name = "In Progress" },
+            new TicketStatus { Id = 4, Name = "Resolved" },
+            new TicketStatus { Id = 5, Name = "Closed" },
+            new TicketStatus { Id = 6, Name = "Pending Approval" } // NEW
         );
 
         modelBuilder.Entity<TicketComment>()
@@ -168,22 +119,10 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<SlaPolicy>().HasData(
-            new SlaPolicy
-            {
-                Id = 1, PriorityLevel = TicketPriority.Low, MaxResponseHours = 24, MaxResolveHours = 48
-            },
-            new SlaPolicy
-            {
-                Id = 2, PriorityLevel = TicketPriority.Medium, MaxResponseHours = 8, MaxResolveHours = 24
-            },
-            new SlaPolicy
-            {
-                Id = 3, PriorityLevel = TicketPriority.High, MaxResponseHours = 4, MaxResolveHours = 8
-            },
-            new SlaPolicy
-            {
-                Id = 4, PriorityLevel = TicketPriority.Critical, MaxResponseHours = 1, MaxResolveHours = 4
-            }
+            new SlaPolicy { Id = 1, PriorityLevel = TicketPriority.Low, MaxResponseHours = 24, MaxResolveHours = 48 },
+            new SlaPolicy { Id = 2, PriorityLevel = TicketPriority.Medium, MaxResponseHours = 8, MaxResolveHours = 24 },
+            new SlaPolicy { Id = 3, PriorityLevel = TicketPriority.High, MaxResponseHours = 4, MaxResolveHours = 8 },
+            new SlaPolicy { Id = 4, PriorityLevel = TicketPriority.Critical, MaxResponseHours = 1, MaxResolveHours = 4 }
         );
 
         modelBuilder.Entity<ApprovalRequest>()
@@ -191,5 +130,11 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             .WithMany()
             .HasForeignKey(a => a.ApproverId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Notification>()
+            .HasOne(n => n.User)
+            .WithMany()
+            .HasForeignKey(n => n.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -15,6 +15,7 @@ public class TicketService : ITicketService
     private readonly ISlaPolicyRepository _slaPolicyRepo;
     private readonly IEmailService _emailService;
     private readonly IUserRepository _userRepository;
+    private readonly INotificationService _notificationService;
 
     public TicketService(
         ITicketRepository repository,
@@ -22,7 +23,8 @@ public class TicketService : ITicketService
         ICategoryRepository categoryRepo,
         IApprovalRequestRepository approvalRepo,
         IEmailService emailService,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        INotificationService notificationService)
     {
         _repository = repository;
         _slaPolicyRepo = slaPolicyRepo;
@@ -30,6 +32,7 @@ public class TicketService : ITicketService
         _approvalRepo = approvalRepo;
         _emailService = emailService;
         _userRepository = userRepository;
+        _notificationService = notificationService;
     }
 
     public async Task<TicketDto> CreateAsync(CreateTicketDto dto, int requesterId)
@@ -81,6 +84,7 @@ public class TicketService : ITicketService
         Ticket created = await _repository.AddAsync(ticket);
         Ticket? fullTicket = await _repository.GetByIdAsync(created.Id);
 
+        // EMAIL TRIGGER: Confirmation to the person who opened the ticket
         if (fullTicket?.Requester?.Email != null)
         {
             try
@@ -91,6 +95,8 @@ public class TicketService : ITicketService
                               <p>View it here: <a href='http://localhost:5173/tickets/{created.Id}'>http://localhost:5173/tickets/{created.Id}</a></p>";
 
                 await _emailService.SendEmailAsync(fullTicket.Requester.Email, subject, body);
+                await _notificationService.SendNotificationAsync(requesterId,
+                    $"Your ticket '{created.Title}' has been successfully created.", created.Id);
             }
             catch (Exception ex)
             {
@@ -113,17 +119,19 @@ public class TicketService : ITicketService
                     CreatedAt = DateTime.UtcNow
                 });
 
+                // EMAIL TRIGGER: Alert the Admin that a new approval is waiting
                 if (approver.Email != null)
                 {
                     try
                     {
                         // Delay to prevent Mailtrap rate-limiting
                         await Task.Delay(1000);
-
                         await _emailService.SendEmailAsync(
                             approver.Email,
                             $"Action Required: Approve {category?.Name} Request",
                             $"<p>Ticket #{created.Id} requires your approval.</p>");
+                        await _notificationService.SendNotificationAsync(approver.Id,
+                            $"Action Required: Pending Approval for Ticket #{created.Id}", created.Id);
                     }
                     catch (Exception ex)
                     {
@@ -223,6 +231,7 @@ public class TicketService : ITicketService
             TicketId = ticketId, UserId = technicianId, Action = "Ticket resolved", Timestamp = DateTime.UtcNow
         });
 
+        // EMAIL TRIGGER: Closing the loop with the customer
         if (ticket.Requester?.Email != null)
         {
             try
@@ -231,6 +240,8 @@ public class TicketService : ITicketService
                     ticket.Requester.Email,
                     $"Your ticket #{ticketId} has been resolved.",
                     $"<p>Your ticket '{ticket.Title}' has been successfully resolved.</p>");
+                await _notificationService.SendNotificationAsync(ticket.RequesterId,
+                    $"Your ticket #{ticket.Id} has been resolved.", ticket.Id);
             }
             catch (Exception ex)
             {

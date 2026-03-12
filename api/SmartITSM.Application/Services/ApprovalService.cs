@@ -10,16 +10,19 @@ public class ApprovalService : IApprovalService
 {
     private readonly IApprovalRequestRepository _approvalRepo;
     private readonly ITicketRepository _ticketRepo;
+    private readonly INotificationService _notificationService;
 
-    public ApprovalService(IApprovalRequestRepository approvalRepo, ITicketRepository ticketRepo)
+    public ApprovalService(IApprovalRequestRepository approvalRepo, ITicketRepository ticketRepo,
+        INotificationService notificationService)
     {
         _approvalRepo = approvalRepo;
         _ticketRepo = ticketRepo;
+        _notificationService = notificationService;
     }
 
     public async Task<IEnumerable<ApprovalDto>> GetMyPendingApprovalsAsync(int approverId)
     {
-        var approvals = await _approvalRepo.GetPendingByApproverIdAsync(approverId);
+        IEnumerable<ApprovalRequest> approvals = await _approvalRepo.GetPendingByApproverIdAsync(approverId);
         return approvals.Select(a => new ApprovalDto(
             a.Id,
             a.TicketId,
@@ -31,9 +34,11 @@ public class ApprovalService : IApprovalService
 
     public async Task<bool> ProcessApprovalAsync(int approvalId, int approverId, bool isApproved, string? reason)
     {
-        var approval = await _approvalRepo.GetByIdAsync(approvalId);
+        ApprovalRequest? approval = await _approvalRepo.GetByIdAsync(approvalId);
         if (approval == null || approval.ApproverId != approverId || approval.Status != ApprovalStatus.Pending)
+        {
             return false;
+        }
 
         approval.Status = isApproved ? ApprovalStatus.Approved : ApprovalStatus.Rejected;
         approval.Reason = reason;
@@ -41,7 +46,7 @@ public class ApprovalService : IApprovalService
 
         await _approvalRepo.UpdateAsync(approval);
 
-        var ticket = await _ticketRepo.GetByIdAsync(approval.TicketId);
+        Ticket? ticket = await _ticketRepo.GetByIdAsync(approval.TicketId);
         if (ticket != null)
         {
             // If approved, status = Open
@@ -56,6 +61,10 @@ public class ApprovalService : IApprovalService
                 Action = isApproved ? "Ticket Approved" : $"Ticket Rejected. Reason: {reason}",
                 Timestamp = DateTime.UtcNow
             });
+
+            string statusWord = isApproved ? "Approved" : "Rejected";
+            await _notificationService.SendNotificationAsync(ticket.RequesterId,
+                $"Your ticket #{ticket.Id} has been {statusWord}!", ticket.Id);
         }
 
         return true;
