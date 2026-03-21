@@ -16,6 +16,7 @@ public class TicketService : ITicketService
     private readonly IEmailService _emailService;
     private readonly IUserRepository _userRepository;
     private readonly INotificationService _notificationService;
+    private readonly ICommentRealtimeService _commentRealtimeService;
 
     public TicketService(
         ITicketRepository repository,
@@ -24,7 +25,8 @@ public class TicketService : ITicketService
         IApprovalRequestRepository approvalRepo,
         IEmailService emailService,
         IUserRepository userRepository,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ICommentRealtimeService commentRealtimeService)
     {
         _repository = repository;
         _slaPolicyRepo = slaPolicyRepo;
@@ -33,6 +35,7 @@ public class TicketService : ITicketService
         _emailService = emailService;
         _userRepository = userRepository;
         _notificationService = notificationService;
+        _commentRealtimeService = commentRealtimeService;
     }
 
     public async Task<TicketDto> CreateAsync(CreateTicketDto dto, int requesterId)
@@ -187,8 +190,12 @@ public class TicketService : ITicketService
         IEnumerable<TicketComment> fetchedComments = await _repository.GetCommentsAsync(ticketId);
         TicketComment fullComment = fetchedComments.First(c => c.Id == created.Id);
 
-        return new TicketCommentDto(fullComment.Id, fullComment.TicketId, fullComment.UserId, fullComment.User.FullName,
-            fullComment.Content, fullComment.CreatedAt);
+        TicketCommentDto commentDto = new(fullComment.Id, fullComment.TicketId, fullComment.UserId,
+            fullComment.User.FullName, fullComment.Content, fullComment.CreatedAt);
+
+        await _commentRealtimeService.BroadcastCommentAsync(commentDto);
+
+        return commentDto;
     }
 
     public async Task<bool> TakeTicketAsync(int ticketId, int technicianId)

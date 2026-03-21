@@ -7,6 +7,7 @@ import {
   resolveTicket,
   takeTicket,
 } from "@/features/tickets/api/ticketApi";
+import { useTicketCommentsSignalR } from "@/features/tickets/hooks/useTicketCommentsSignalR";
 import { formatLocalTime, getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -39,6 +40,8 @@ export const TicketDetailPage = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [commentText, setCommentText] = useState("");
+
+  useTicketCommentsSignalR(ticketId);
 
   const { data: ticket, isLoading: isLoadingTicket } = useQuery({
     queryKey: ["ticket", ticketId],

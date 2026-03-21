@@ -144,7 +144,7 @@ builder.Services.AddAuthentication(options =>
         {
             StringValues accessToken = context.Request.Query["access_token"];
             PathString path = context.HttpContext.Request.Path;
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/notifications"))
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
             {
                 context.Token = accessToken;
             }
@@ -157,6 +157,7 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<ICommentRealtimeService, CommentRealtimeService>();
 builder.Services.AddSignalR();
 
 WebApplication app = builder.Build();
@@ -195,4 +196,5 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
 
 app.MapHub<NotificationHub>("/hubs/notifications");
+app.MapHub<CommentsHub>("/hubs/comments");
 app.Run();
