@@ -27,12 +27,13 @@ public class NotificationService : INotificationService
             Message = message,
             RelatedTicketId = ticketId,
             IsRead = false,
+            IsSeen = false,
             CreatedAt = DateTime.UtcNow
         };
 
         await _repository.AddAsync(notification);
 
-        NotificationDto dto = new(notification.Id, message, false, ticketId, notification.CreatedAt);
+        NotificationDto dto = new(notification.Id, message, false, false, ticketId, notification.CreatedAt);
 
         await _hubContext.Clients.User(userId.ToString()).SendAsync("ReceiveNotification", dto);
     }
@@ -41,7 +42,7 @@ public class NotificationService : INotificationService
     {
         IEnumerable<Notification> notifications = await _repository.GetUnreadByUserIdAsync(userId);
         return notifications.Select(n =>
-            new NotificationDto(n.Id, n.Message, n.IsRead, n.RelatedTicketId, n.CreatedAt));
+            new NotificationDto(n.Id, n.Message, n.IsRead, n.IsSeen, n.RelatedTicketId, n.CreatedAt));
     }
 
     public async Task<bool> MarkAsReadAsync(int notificationId, int userId)
@@ -55,5 +56,22 @@ public class NotificationService : INotificationService
         notification.IsRead = true;
         await _repository.UpdateAsync(notification);
         return true;
+    }
+
+    public async Task MarkAllAsReadAsync(int userId)
+    {
+        await _repository.MarkAllAsReadByUserIdAsync(userId);
+    }
+
+    public async Task<IEnumerable<NotificationDto>> GetLatestAsync(int userId)
+    {
+        IEnumerable<Notification> notifications = await _repository.GetLatestByUserIdAsync(userId, 10);
+        return notifications.Select(n =>
+            new NotificationDto(n.Id, n.Message, n.IsRead, n.IsSeen, n.RelatedTicketId, n.CreatedAt));
+    }
+
+    public async Task MarkAllAsSeenAsync(int userId)
+    {
+        await _repository.MarkAllAsSeenByUserIdAsync(userId);
     }
 }

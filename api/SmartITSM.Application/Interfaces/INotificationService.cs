@@ -7,4 +7,7 @@ public interface INotificationService
     Task SendNotificationAsync(int userId, string message, int? ticketId);
     Task<IEnumerable<NotificationDto>> GetUnreadAsync(int userId);
     Task<bool> MarkAsReadAsync(int notificationId, int userId);
+    Task MarkAllAsReadAsync(int userId);
+    Task MarkAllAsSeenAsync(int userId);
+    Task<IEnumerable<NotificationDto>> GetLatestAsync(int userId);
 }

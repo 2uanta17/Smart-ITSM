@@ -119,6 +119,8 @@ public class TicketService : ITicketService
                     CreatedAt = DateTime.UtcNow
                 });
 
+                await _notificationService.SendNotificationAsync(approver.Id,
+                    $"Action Required: Pending Approval for Ticket #{created.Id}", created.Id);
                 // EMAIL TRIGGER: Alert the Admin that a new approval is waiting
                 if (approver.Email != null)
                 {
@@ -130,8 +132,6 @@ public class TicketService : ITicketService
                             approver.Email,
                             $"Action Required: Approve {category?.Name} Request",
                             $"<p>Ticket #{created.Id} requires your approval.</p>");
-                        await _notificationService.SendNotificationAsync(approver.Id,
-                            $"Action Required: Pending Approval for Ticket #{created.Id}", created.Id);
                     }
                     catch (Exception ex)
                     {

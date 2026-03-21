@@ -1,17 +1,27 @@
 import { getDashboardStats } from "@/features/dashboard/api/dashboardApi";
+import { useNotifications } from "@/features/notifications/hooks/useNotifications";
 import { useAuthStore } from "@/stores/authStore";
 import {
+  ActionIcon,
   AppShell,
   Badge,
   Burger,
   Button,
+  Divider,
   Group,
+  Indicator,
   NavLink,
+  Popover,
+  ScrollArea,
+  Stack,
   Text,
+  UnstyledButton,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { IconBell } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 interface NavItem {
   label: string;
@@ -42,8 +52,13 @@ const navData: NavItem[] = [
 
 export function MainLayout() {
   const [opened, { toggle }] = useDisclosure();
+  const [popoverOpened, setPopoverOpened] = useState(false);
   const { logout, user } = useAuthStore();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const { notifications, markAsRead, markAllAsSeen } = useNotifications();
+  const unseenCount = notifications.filter((n) => !n.isSeen).length;
 
   const { data: stats } = useQuery({
     queryKey: ["dashboardStats"],
@@ -51,6 +66,26 @@ export function MainLayout() {
     enabled: !!user,
     refetchInterval: 30000,
   });
+
+  const handleNotificationClick = async (
+    notificationId: number,
+    isRead: boolean,
+    relatedTicketId: number | null,
+    message: string,
+  ) => {
+    if (!isRead) {
+      await markAsRead(notificationId);
+    }
+
+    setPopoverOpened(false);
+    if (relatedTicketId) {
+      if (message.toLowerCase().includes("approval")) {
+        navigate("/app/approvals");
+      } else {
+        navigate(`/app/tickets/${relatedTicketId}`);
+      }
+    }
+  };
 
   const links = navData.map((item) => {
     if (
@@ -104,6 +139,98 @@ export function MainLayout() {
             <Text fw={700}>IT Service Management</Text>
           </Group>
           <Group>
+            <Popover
+              width={320}
+              position="bottom-end"
+              withArrow
+              shadow="md"
+              opened={popoverOpened}
+              onChange={setPopoverOpened}
+            >
+              <Popover.Target>
+                <Indicator
+                  color="red"
+                  size={18}
+                  label={unseenCount}
+                  disabled={unseenCount === 0}
+                  offset={4}
+                >
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    size="lg"
+                    radius="xl"
+                    onClick={() => {
+                      const willOpen = !popoverOpened;
+                      setPopoverOpened(willOpen);
+                      if (willOpen && unseenCount > 0) {
+                        markAllAsSeen().catch(console.error);
+                      }
+                    }}
+                  >
+                    <IconBell size={20} />
+                  </ActionIcon>
+                </Indicator>
+              </Popover.Target>
+
+              <Popover.Dropdown p={0}>
+                <Text
+                  fw={600}
+                  p="xs"
+                  bg="gray.0"
+                  style={{ borderBottom: "1px solid #eee" }}
+                >
+                  Notifications ({notifications.length})
+                </Text>
+
+                <ScrollArea.Autosize mah={350}>
+                  {notifications.length === 0 ? (
+                    <Text p="md" c="dimmed" size="sm" ta="center">
+                      All caught up!
+                    </Text>
+                  ) : (
+                    <Stack gap={0}>
+                      {notifications.map((n) => (
+                        <div key={n.id}>
+                          <UnstyledButton
+                            w="100%"
+                            p="sm"
+                            onClick={() =>
+                              handleNotificationClick(
+                                n.id,
+                                n.isRead,
+                                n.relatedTicketId,
+                                n.message,
+                              ).catch(console.error)
+                            }
+                            style={(theme) => ({
+                              backgroundColor: n.isRead
+                                ? "transparent"
+                                : theme.colors.blue[0],
+                              "&:hover": {
+                                backgroundColor: theme.colors.gray[1],
+                              },
+                            })}
+                          >
+                            <Text size="sm" fw={n.isRead ? 400 : 600}>
+                              {n.message}
+                            </Text>
+                            <Text size="xs" c="dimmed" mt={4}>
+                              {new Date(n.createdAt).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </Text>
+                          </UnstyledButton>
+                          <Divider />
+                        </div>
+                      ))}
+                    </Stack>
+                  )}
+                </ScrollArea.Autosize>
+              </Popover.Dropdown>
+            </Popover>
+
             <Text size="sm" visibleFrom="sm">
               {user?.email}
             </Text>

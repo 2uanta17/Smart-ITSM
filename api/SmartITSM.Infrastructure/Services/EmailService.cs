@@ -18,6 +18,14 @@ public class EmailService : IEmailService
 
     public async Task SendEmailAsync(string toEmail, string subject, string htmlBody)
     {
+        bool enableEmails = _configuration.GetValue<bool>("SmtpSettings:EnableEmails", true);
+
+        if (!enableEmails)
+        {
+            Console.WriteLine($"[EMAIL DISABLED] Would have sent to: {toEmail} | Subject: {subject}");
+            return;
+        }
+
         string? host = _configuration["SmtpSettings:Host"];
         int port = int.Parse(_configuration["SmtpSettings:Port"] ?? "2525");
         string? username = _configuration["SmtpSettings:Username"];

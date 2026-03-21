@@ -1,11 +1,12 @@
-import "./App.css";
-import "@mantine/core/styles.css";
-import "@mantine/notifications/styles.css";
 import "@mantine/charts/styles.css";
 import { createTheme, MantineProvider } from "@mantine/core";
-import { BrowserRouter } from "react-router-dom";
-import { AppRoutes } from "./routes/routes";
+import "@mantine/core/styles.css";
 import { Notifications } from "@mantine/notifications";
+import "@mantine/notifications/styles.css";
+import { BrowserRouter } from "react-router-dom";
+import "./App.css";
+import { SignalRManager } from "./features/notifications/components/SignalRManager";
+import { AppRoutes } from "./routes/routes";
 
 const theme = createTheme({
   defaultRadius: "xs",
@@ -22,6 +23,7 @@ function App() {
     <MantineProvider theme={theme}>
       <Notifications position="bottom-left" zIndex={1000} />
       <BrowserRouter>
+        <SignalRManager />
         <AppRoutes />
       </BrowserRouter>
     </MantineProvider>

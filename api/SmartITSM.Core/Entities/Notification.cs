@@ -13,6 +13,8 @@ public class Notification
 
     public bool IsRead { get; set; } = false;
 
+    public bool IsSeen { get; set; }
+
     public int? RelatedTicketId { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

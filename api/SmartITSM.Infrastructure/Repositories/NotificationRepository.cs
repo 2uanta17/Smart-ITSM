@@ -40,4 +40,41 @@ public class NotificationRepository : INotificationRepository
         _context.Entry(notification).State = EntityState.Modified;
         await _context.SaveChangesAsync();
     }
+
+    public async Task MarkAllAsReadByUserIdAsync(int userId)
+    {
+        List<Notification> unreadNotifications = await _context.Notifications
+            .Where(n => n.UserId == userId && !n.IsRead)
+            .ToListAsync();
+
+        foreach (Notification notification in unreadNotifications)
+        {
+            notification.IsRead = true;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task MarkAllAsSeenByUserIdAsync(int userId)
+    {
+        List<Notification> unseenNotifications = await _context.Notifications
+            .Where(n => n.UserId == userId && !n.IsSeen)
+            .ToListAsync();
+
+        foreach (Notification notification in unseenNotifications)
+        {
+            notification.IsSeen = true;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<Notification>> GetLatestByUserIdAsync(int userId, int limit = 10)
+    {
+        return await _context.Notifications
+            .Where(n => n.UserId == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(limit)
+            .ToListAsync();
+    }
 }
