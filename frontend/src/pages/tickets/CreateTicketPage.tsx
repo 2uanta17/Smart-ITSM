@@ -1,27 +1,38 @@
-import { useState } from "react";
-import { useForm, Controller } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
-import { useQuery, useMutation } from "@tanstack/react-query";
 import {
-  TextInput,
-  Textarea,
-  Select,
-  FileInput,
-  Button,
-  Title,
-  Paper,
-  Container,
-  LoadingOverlay,
-} from "@mantine/core";
-import { notifications } from "@mantine/notifications";
-import { createTicket } from "@/features/tickets/api/ticketApi";
+  createTicket,
+  predictTicketRouting,
+} from "@/features/tickets/api/ticketApi";
 import api from "@/lib/axios";
 import { getErrorMessage } from "@/lib/utils";
+import {
+  Button,
+  Container,
+  FileInput,
+  Group,
+  LoadingOverlay,
+  Paper,
+  Select,
+  TextInput,
+  Textarea,
+  Title,
+} from "@mantine/core";
+import { notifications } from "@mantine/notifications";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 interface Category {
   id: number;
   name: string;
   defaultPriority: string;
+}
+
+interface CreateTicketFormValues {
+  title: string;
+  description: string;
+  priority: string;
+  categoryId: string;
 }
 
 const getCategories = async () => {
@@ -32,17 +43,20 @@ const getCategories = async () => {
 export const CreateTicketPage = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
+  const [isAILoading, setIsAILoading] = useState(false);
 
   const {
     register,
     handleSubmit,
     control,
+    setValue,
+    getValues,
     formState: { errors },
   } = useForm({
     defaultValues: {
       title: "",
       description: "",
-      priority: "1",
+      priority: "",
       categoryId: "",
     },
   });
@@ -71,11 +85,54 @@ export const CreateTicketPage = () => {
     },
   });
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: CreateTicketFormValues) => {
     mutation.mutate({
       ...data,
       attachment: file,
     });
+  };
+
+  const handleAIPrediction = async () => {
+    const title = getValues("title")?.trim();
+    const description = getValues("description")?.trim();
+
+    if (!title || !description) {
+      notifications.show({
+        title: "Missing input",
+        message:
+          "Please enter both Title and Description before AI prediction.",
+        color: "yellow",
+      });
+      return;
+    }
+
+    try {
+      setIsAILoading(true);
+      const prediction = await predictTicketRouting(title, description);
+
+      setValue("categoryId", prediction.categoryId.toString(), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      setValue("priority", prediction.priority.toString(), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+
+      notifications.show({
+        title: "Success",
+        message: "AI Prediction applied successfully.",
+        color: "green",
+      });
+    } catch (error) {
+      notifications.show({
+        title: "AI Prediction Failed",
+        message: getErrorMessage(error),
+        color: "red",
+      });
+    } finally {
+      setIsAILoading(false);
+    }
   };
 
   const priorityOptions = [
@@ -96,7 +153,9 @@ export const CreateTicketPage = () => {
         Submit New Ticket
       </Title>
       <Paper withBorder p="md" pos="relative">
-        <LoadingOverlay visible={isLoadingCategories || mutation.isPending} />
+        <LoadingOverlay
+          visible={isLoadingCategories || mutation.isPending || isAILoading}
+        />
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <TextInput
@@ -105,6 +164,17 @@ export const CreateTicketPage = () => {
             error={errors.title?.message as string}
             mb="sm"
           />
+
+          <Textarea
+            label="Description"
+            minRows={4}
+            {...register("description", {
+              required: "Description is required",
+            })}
+            error={errors.description?.message as string}
+            mb="sm"
+          />
+
           <Controller
             name="categoryId"
             control={control}
@@ -126,26 +196,32 @@ export const CreateTicketPage = () => {
           <Controller
             name="priority"
             control={control}
+            rules={{ required: "Please select a priority" }}
             render={({ field }) => (
               <Select
                 label="Priority"
+                placeholder="Select priority"
                 data={priorityOptions}
                 value={field.value}
                 onChange={field.onChange}
+                error={errors.priority?.message as string}
                 mb="sm"
               />
             )}
           />
 
-          <Textarea
-            label="Description"
-            minRows={4}
-            {...register("description", {
-              required: "Description is required",
-            })}
-            error={errors.description?.message as string}
-            mb="sm"
-          />
+          <Button
+            type="button"
+            variant="light"
+            onClick={handleAIPrediction}
+            loading={isAILoading}
+            disabled={mutation.isPending || isLoadingCategories}
+            fullWidth
+            mt="xl"
+            mb="md"
+          >
+            Auto-Fill using AI
+          </Button>
 
           <FileInput
             label="Attachment (Optional)"
@@ -156,9 +232,11 @@ export const CreateTicketPage = () => {
             clearable
           />
 
-          <Button type="submit" loading={mutation.isPending} fullWidth>
-            Submit Ticket
-          </Button>
+          <Group grow>
+            <Button type="submit" loading={mutation.isPending} fullWidth>
+              Submit Ticket
+            </Button>
+          </Group>
         </form>
       </Paper>
     </Container>

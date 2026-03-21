@@ -6,6 +6,11 @@ import type {
   TicketComment,
 } from "../types/ticketTypes";
 
+interface AIPredictionResponse {
+  categoryId: number;
+  priority: number;
+}
+
 export const getTickets = async () => {
   const { data } = await api.get<Ticket[]>("/tickets");
   return data;
@@ -69,5 +74,18 @@ export const exportTicketsCsv = async () => {
   const { data } = await api.get("/reports/tickets/export", {
     responseType: "blob",
   });
+  return data;
+};
+
+export const predictTicketRouting = async (
+  title: string,
+  description: string,
+): Promise<AIPredictionResponse> => {
+  const { data } = await api.post<AIPredictionResponse>(
+    "/ai/predict",
+    { title, description },
+    { timeout: 12000 },
+  );
+
   return data;
 };

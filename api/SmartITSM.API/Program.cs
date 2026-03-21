@@ -109,6 +109,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddHttpClient<IAIService, GeminiAIService>();
 
 string? jwtKey = builder.Configuration["JwtSettings:Key"];
 string? jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
