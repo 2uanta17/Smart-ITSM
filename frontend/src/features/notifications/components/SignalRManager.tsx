@@ -16,6 +16,7 @@ export function SignalRManager() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
   const connectionRef = useRef<HubConnection | null>(null);
 
   useEffect(() => {
@@ -51,7 +52,11 @@ export function SignalRManager() {
             mantineNotifications.hide(`notif-${notification.id}`);
 
             if (notification.message.toLowerCase().includes("approval")) {
-              navigate("/app/approvals");
+              if (user?.role === "Admin") {
+                navigate("/app/approvals");
+              } else {
+                navigate(`/app/tickets/${notification.relatedTicketId}`);
+              }
             } else {
               navigate(`/app/tickets/${notification.relatedTicketId}`);
             }
@@ -101,7 +106,7 @@ export function SignalRManager() {
         connectionRef.current = null;
       }
     };
-  }, [isAuthenticated, queryClient, navigate]);
+  }, [isAuthenticated, queryClient, navigate, user?.role]);
 
   return null;
 }

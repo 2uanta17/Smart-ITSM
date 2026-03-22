@@ -1,3 +1,6 @@
+import { getErrorMessage } from "@/lib/utils";
+import { useAuthStore } from "@/stores/authStore";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Anchor,
   Button,
@@ -5,19 +8,16 @@ import {
   Group,
   Paper,
   PasswordInput,
+  Stack,
   TextInput,
   Title,
-  Stack,
 } from "@mantine/core";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate } from "react-router-dom";
-import { loginSchema, type LoginSchema } from "../../types/schema";
-import { loginUser } from "../../api/auth";
-import classes from "./LoginForm.module.css";
-import { useAuthStore } from "@/stores/authStore";
-import { getErrorMessage } from "@/lib/utils";
 import { notifications } from "@mantine/notifications";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { loginUser } from "../../api/auth";
+import { loginSchema, type LoginSchema } from "../../types/schema";
+import classes from "./LoginForm.module.css";
 
 export function LoginForm() {
   const navigate = useNavigate();
@@ -77,7 +77,12 @@ export function LoginForm() {
             />
 
             <Group justify="flex-end">
-              <Anchor component="button" size="sm">
+              <Anchor
+                onClick={() => navigate("/auth/forgot-password")}
+                size="sm"
+                component="button"
+                c="blue"
+              >
                 Forgot password?
               </Anchor>
             </Group>

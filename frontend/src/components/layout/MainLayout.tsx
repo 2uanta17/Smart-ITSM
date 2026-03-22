@@ -35,7 +35,7 @@ const navData: NavItem[] = [
   {
     label: "My Approvals",
     link: "/app/approvals",
-    allowedRoles: ["Admin", "Technician"],
+    allowedRoles: ["Admin"],
   },
   {
     label: "Departments",
@@ -80,7 +80,11 @@ export function MainLayout() {
     setPopoverOpened(false);
     if (relatedTicketId) {
       if (message.toLowerCase().includes("approval")) {
-        navigate("/app/approvals");
+        if (user?.role === "Admin") {
+          navigate("/app/approvals");
+        } else {
+          navigate(`/app/tickets/${relatedTicketId}`);
+        }
       } else {
         navigate(`/app/tickets/${relatedTicketId}`);
       }
