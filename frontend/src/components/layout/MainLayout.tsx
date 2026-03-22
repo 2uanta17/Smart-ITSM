@@ -43,7 +43,7 @@ const navData: NavItem[] = [
     link: "/app/departments",
     allowedRoles: ["Admin", "Technician"],
   },
-  { label: "Users", link: "/app/users", allowedRoles: ["Admin", "Technician"] },
+  { label: "Users", link: "/app/users", allowedRoles: ["Admin"] },
   {
     label: "Assets",
     link: "/app/assets",

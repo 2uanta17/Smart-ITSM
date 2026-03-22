@@ -36,7 +36,7 @@ import {
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 export const TicketDetailPage = () => {
@@ -46,6 +46,7 @@ export const TicketDetailPage = () => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const [commentText, setCommentText] = useState("");
+  const commentsViewportRef = useRef<HTMLDivElement>(null);
 
   useTicketCommentsSignalR(ticketId);
 
@@ -208,6 +209,17 @@ export const TicketDetailPage = () => {
     onError: handleError,
   });
 
+  useEffect(() => {
+    if (!commentsViewportRef.current) {
+      return;
+    }
+
+    commentsViewportRef.current.scrollTo({
+      top: commentsViewportRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [comments]);
+
   if (isLoadingTicket) return <LoadingOverlay visible />;
   if (!ticket) return <Text>Ticket not found</Text>;
 
@@ -319,7 +331,13 @@ export const TicketDetailPage = () => {
 
           <Tabs.Panel value="comments">
             <LoadingOverlay visible={isLoadingComments} />
-            <ScrollArea h={300} type="always" offsetScrollbars p="sm">
+            <ScrollArea
+              h={300}
+              type="always"
+              offsetScrollbars
+              p="sm"
+              viewportRef={commentsViewportRef}
+            >
               <Stack gap="sm">
                 {comments.length === 0 ? (
                   <Text c="dimmed" ta="center" mt="xl">

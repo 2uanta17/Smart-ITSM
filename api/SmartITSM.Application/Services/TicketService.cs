@@ -9,12 +9,15 @@ namespace SmartITSM.Application.Services;
 
 public class TicketService : ITicketService
 {
+    private const string SlaEscalationPrefix = "SLA Breach Alert";
+
     private readonly IApprovalRequestRepository _approvalRepo;
     private readonly ICategoryRepository _categoryRepo;
     private readonly ITicketRepository _repository;
     private readonly ISlaPolicyRepository _slaPolicyRepo;
     private readonly IEmailService _emailService;
     private readonly IUserRepository _userRepository;
+    private readonly INotificationRepository _notificationRepository;
     private readonly INotificationService _notificationService;
     private readonly ICommentRealtimeService _commentRealtimeService;
     private readonly ITicketRealtimeService _ticketRealtimeService;
@@ -26,6 +29,7 @@ public class TicketService : ITicketService
         IApprovalRequestRepository approvalRepo,
         IEmailService emailService,
         IUserRepository userRepository,
+        INotificationRepository notificationRepository,
         INotificationService notificationService,
         ICommentRealtimeService commentRealtimeService,
         ITicketRealtimeService ticketRealtimeService)
@@ -36,6 +40,7 @@ public class TicketService : ITicketService
         _approvalRepo = approvalRepo;
         _emailService = emailService;
         _userRepository = userRepository;
+        _notificationRepository = notificationRepository;
         _notificationService = notificationService;
         _commentRealtimeService = commentRealtimeService;
         _ticketRealtimeService = ticketRealtimeService;
@@ -161,18 +166,25 @@ public class TicketService : ITicketService
     public async Task<IEnumerable<TicketDto>> GetAllAsync()
     {
         IEnumerable<Ticket> tickets = await _repository.GetAllAsync();
+        await CheckAndEscalateSlaBreachesAsync(tickets);
         return tickets.Select(MapToDto);
     }
 
     public async Task<IEnumerable<TicketDto>> GetMyTicketsAsync(int userId)
     {
         IEnumerable<Ticket> tickets = await _repository.GetByRequesterIdAsync(userId);
+        await CheckAndEscalateSlaBreachesAsync(tickets);
         return tickets.Select(MapToDto);
     }
 
     public async Task<TicketDto?> GetByIdAsync(int id)
     {
         Ticket? ticket = await _repository.GetByIdAsync(id);
+        if (ticket != null)
+        {
+            await CheckAndEscalateSlaBreachesAsync(new[] { ticket });
+        }
+
         return ticket == null ? null : MapToDto(ticket);
     }
 
@@ -347,6 +359,63 @@ public class TicketService : ITicketService
         IEnumerable<AuditLog> logs = await _repository.GetAuditLogsAsync(ticketId);
         return logs.Select(l => new AuditLogDto(
             l.Id, l.TicketId, l.Action, l.User.FullName, l.Timestamp));
+    }
+
+    private async Task CheckAndEscalateSlaBreachesAsync(IEnumerable<Ticket> tickets)
+    {
+        DateTime now = DateTime.UtcNow;
+        List<Ticket> overdueTickets = tickets
+            .Where(ticket =>
+                ticket.DueDate.HasValue &&
+                ticket.DueDate.Value <= now &&
+                ticket.Status?.Name is not ("Resolved" or "Cancelled"))
+            .ToList();
+
+        if (overdueTickets.Count == 0)
+        {
+            return;
+        }
+
+        IEnumerable<User> admins = await _userRepository.GetUsersByRoleAsync(AppRoles.Admin);
+
+        foreach (Ticket ticket in overdueTickets)
+        {
+            string notificationMessage =
+                $"{SlaEscalationPrefix}: Ticket #{ticket.Id} '{ticket.Title}' is overdue and needs immediate attention.";
+
+            foreach (User admin in admins)
+            {
+                bool alreadyEscalated = await _notificationRepository.ExistsForUserAndTicketAsync(
+                    admin.Id,
+                    ticket.Id,
+                    SlaEscalationPrefix);
+
+                if (alreadyEscalated)
+                {
+                    continue;
+                }
+
+                await _notificationService.SendNotificationAsync(admin.Id, notificationMessage, ticket.Id);
+
+                if (!string.IsNullOrWhiteSpace(admin.Email))
+                {
+                    try
+                    {
+                        string subject = $"SLA Breach: Ticket #{ticket.Id} is overdue";
+                        string body = $@"<p>Ticket <strong>#{ticket.Id} - {ticket.Title}</strong> has breached SLA.</p>
+<p><strong>Status:</strong> {ticket.Status?.Name ?? "Unknown"}</p>
+<p><strong>Due date (UTC):</strong> {ticket.DueDate:yyyy-MM-dd HH:mm}</p>
+<p>Please review this ticket as soon as possible.</p>";
+
+                        await _emailService.SendEmailAsync(admin.Email, subject, body);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"SLA escalation email failed: {ex.Message}");
+                    }
+                }
+            }
+        }
     }
 
     private static TicketDto MapToDto(Ticket ticket)

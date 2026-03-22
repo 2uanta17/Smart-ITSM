@@ -30,6 +30,15 @@ public class NotificationRepository : INotificationRepository
             .ToListAsync();
     }
 
+    public async Task<bool> ExistsForUserAndTicketAsync(int userId, int ticketId, string messagePrefix)
+    {
+        return await _context.Notifications
+            .AnyAsync(n =>
+                n.UserId == userId &&
+                n.RelatedTicketId == ticketId &&
+                n.Message.StartsWith(messagePrefix));
+    }
+
     public async Task<Notification?> GetByIdAsync(int id)
     {
         return await _context.Notifications.FindAsync(id);

@@ -116,7 +116,16 @@ export const TicketListPage = () => {
   const rows = filteredTickets.map((t) => (
     <Table.Tr
       key={t.id}
-      style={{ cursor: "pointer" }}
+      style={{
+        cursor: "pointer",
+        backgroundColor:
+          t.dueDate &&
+          new Date(t.dueDate) <= new Date() &&
+          t.status !== "Resolved" &&
+          t.status !== "Cancelled"
+            ? "var(--mantine-color-red-0)"
+            : undefined,
+      }}
       onClick={() => navigate(`/app/tickets/${t.id}`)}
     >
       <Table.Td>#{t.id}</Table.Td>

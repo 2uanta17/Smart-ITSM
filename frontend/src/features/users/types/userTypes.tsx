@@ -15,3 +15,11 @@ export interface CreateUserDto {
   departmentId: number;
   role: string;
 }
+
+export interface UpdateUserDto {
+  fullName: string;
+  email: string;
+  departmentId: number;
+  role: string;
+  isActive: boolean;
+}

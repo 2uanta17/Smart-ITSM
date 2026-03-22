@@ -1,9 +1,10 @@
-import { Modal, Button, TextInput, Select, PasswordInput } from "@mantine/core";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import type { CreateUserDto } from "../types/userTypes";
 import type { Department } from "@/features/departments/types/departmentTypes";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button, Modal, PasswordInput, Select, TextInput } from "@mantine/core";
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
+import type { CreateUserDto, UpdateUserDto, User } from "../types/userTypes";
 
 const schema = z.object({
   fullName: z.string().min(1, "Name is required"),
@@ -11,17 +12,22 @@ const schema = z.object({
     .string()
     .min(1, "Email is required")
     .pipe(z.email("Invalid email format")),
-  password: z.string().min(6, "Min 6 characters"),
+  password: z.string().optional(),
   departmentId: z.string().min(1, "Department is required"),
   role: z.enum(["Admin", "Technician", "Requester"]),
+  isActive: z.boolean(),
 });
+
+type UserFormData = z.infer<typeof schema>;
 
 interface Props {
   opened: boolean;
   onClose: () => void;
-  onSubmit: (data: CreateUserDto) => void;
+  onSubmit: (data: CreateUserDto | UpdateUserDto) => void;
   departments: Department[];
   isLoading: boolean;
+  initialData?: User | null;
+  isEditing?: boolean;
 }
 
 export const UserModal = ({
@@ -30,6 +36,8 @@ export const UserModal = ({
   onSubmit,
   departments,
   isLoading,
+  initialData,
+  isEditing = false,
 }: Props) => {
   const {
     register,
@@ -37,13 +45,64 @@ export const UserModal = ({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm({
+  } = useForm<UserFormData>({
     resolver: zodResolver(schema),
-    defaultValues: { role: "Requester" },
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      departmentId: "",
+      role: "Requester",
+      isActive: true,
+    },
   });
 
-  const handleFormSubmit = (data: any) => {
-    onSubmit({ ...data, departmentId: Number(data.departmentId) });
+  useEffect(() => {
+    if (initialData) {
+      reset({
+        fullName: initialData.fullName,
+        email: initialData.email,
+        password: "",
+        departmentId: initialData.departmentId.toString(),
+        role: initialData.role as "Admin" | "Technician" | "Requester",
+        isActive: initialData.isActive,
+      });
+      return;
+    }
+
+    reset({
+      fullName: "",
+      email: "",
+      password: "",
+      departmentId: "",
+      role: "Requester",
+      isActive: true,
+    });
+  }, [initialData, opened, reset]);
+
+  const handleFormSubmit = (data: UserFormData) => {
+    if (!isEditing) {
+      if (!data.password || data.password.length < 6) {
+        return;
+      }
+
+      onSubmit({
+        fullName: data.fullName,
+        email: data.email,
+        password: data.password,
+        departmentId: Number(data.departmentId),
+        role: data.role,
+      });
+      return;
+    }
+
+    onSubmit({
+      fullName: data.fullName,
+      email: data.email,
+      departmentId: Number(data.departmentId),
+      role: data.role,
+      isActive: data.isActive,
+    });
   };
 
   const handleClose = () => {
@@ -57,7 +116,11 @@ export const UserModal = ({
   }));
 
   return (
-    <Modal opened={opened} onClose={handleClose} title="Create User">
+    <Modal
+      opened={opened}
+      onClose={handleClose}
+      title={isEditing ? "Edit User" : "Create User"}
+    >
       <form onSubmit={handleSubmit(handleFormSubmit)}>
         <TextInput
           label="Full Name"
@@ -71,12 +134,17 @@ export const UserModal = ({
           error={errors.email?.message as string}
           mb="sm"
         />
-        <PasswordInput
-          label="Password"
-          {...register("password")}
-          error={errors.password?.message as string}
-          mb="sm"
-        />
+        {!isEditing && (
+          <PasswordInput
+            label="Password"
+            {...register("password", {
+              validate: (value) =>
+                !!value && value.length >= 6 ? true : "Min 6 characters",
+            })}
+            error={errors.password?.message as string}
+            mb="sm"
+          />
+        )}
         <Controller
           name="departmentId"
           control={control}
@@ -103,8 +171,26 @@ export const UserModal = ({
             />
           )}
         />
+        {isEditing && (
+          <Controller
+            name="isActive"
+            control={control}
+            render={({ field }) => (
+              <Select
+                label="Status"
+                data={[
+                  { value: "true", label: "Active" },
+                  { value: "false", label: "Inactive" },
+                ]}
+                value={field.value ? "true" : "false"}
+                onChange={(value) => field.onChange(value === "true")}
+                mb="md"
+              />
+            )}
+          />
+        )}
         <Button type="submit" loading={isLoading} fullWidth>
-          Create User
+          {isEditing ? "Update" : "Create User"}
         </Button>
       </form>
     </Modal>
