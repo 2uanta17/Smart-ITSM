@@ -1,3 +1,4 @@
+import { parseApiDate } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
   HttpTransportType,
@@ -47,7 +48,8 @@ export function useTicketCommentsSignalR(ticketId: number) {
 
           return [...oldData, comment].sort(
             (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+              parseApiDate(a.createdAt).getTime() -
+              parseApiDate(b.createdAt).getTime(),
           );
         },
       );

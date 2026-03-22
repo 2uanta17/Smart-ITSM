@@ -27,6 +27,9 @@ export const TicketListPage = () => {
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ["tickets"],
     queryFn: isStaff ? getTickets : getMyTickets,
+    refetchInterval: 15000,
+    refetchOnWindowFocus: true,
+    staleTime: 5000,
   });
 
   const exportMutation = useMutation({
@@ -60,12 +63,20 @@ export const TicketListPage = () => {
     switch (status) {
       case "Open":
         return "green";
+      case "Pending":
+        return "orange";
+      case "Pending Approval":
+        return "violet";
+      case "In Progress":
+        return "yellow";
       case "Resolved":
         return "blue";
+      case "Cancelled":
+        return "red";
       case "Closed":
         return "gray";
       default:
-        return "yellow";
+        return "dark";
     }
   };
 

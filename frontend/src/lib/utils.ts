@@ -1,5 +1,18 @@
 import { isAxiosError } from "axios";
 
+const HAS_TIMEZONE_SUFFIX = /(Z|[+-]\d{2}:\d{2})$/i;
+
+export const normalizeApiDateString = (dateString: string) => {
+  if (!dateString) return "";
+
+  return HAS_TIMEZONE_SUFFIX.test(dateString) ? dateString : `${dateString}Z`;
+};
+
+export const parseApiDate = (dateString: string) => {
+  const normalized = normalizeApiDateString(dateString);
+  return new Date(normalized);
+};
+
 export const getErrorMessage = (error: unknown): string => {
   if (isAxiosError(error) && error.response?.data?.message) {
     return error.response.data.message;
@@ -27,14 +40,21 @@ export const getPriorityColor = (priority: string) => {
 
 export const formatLocalTime = (dateString: string) => {
   if (!dateString) return "N/A";
-  const safeDateString = dateString.endsWith("Z")
-    ? dateString
-    : dateString + "Z";
-  return new Date(safeDateString).toLocaleString();
+
+  return parseApiDate(dateString).toLocaleString();
 };
 
 export const formatLocalDate = (dateString: string) => {
   if (!dateString) return "N/A";
-  const safeDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
-  return new Date(safeDateString).toLocaleDateString(); 
+
+  return parseApiDate(dateString).toLocaleDateString();
+};
+
+export const formatLocalClockTime = (dateString: string) => {
+  if (!dateString) return "N/A";
+
+  return parseApiDate(dateString).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };

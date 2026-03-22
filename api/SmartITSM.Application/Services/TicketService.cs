@@ -17,6 +17,7 @@ public class TicketService : ITicketService
     private readonly IUserRepository _userRepository;
     private readonly INotificationService _notificationService;
     private readonly ICommentRealtimeService _commentRealtimeService;
+    private readonly ITicketRealtimeService _ticketRealtimeService;
 
     public TicketService(
         ITicketRepository repository,
@@ -26,7 +27,8 @@ public class TicketService : ITicketService
         IEmailService emailService,
         IUserRepository userRepository,
         INotificationService notificationService,
-        ICommentRealtimeService commentRealtimeService)
+        ICommentRealtimeService commentRealtimeService,
+        ITicketRealtimeService ticketRealtimeService)
     {
         _repository = repository;
         _slaPolicyRepo = slaPolicyRepo;
@@ -36,6 +38,7 @@ public class TicketService : ITicketService
         _userRepository = userRepository;
         _notificationService = notificationService;
         _commentRealtimeService = commentRealtimeService;
+        _ticketRealtimeService = ticketRealtimeService;
     }
 
     public async Task<TicketDto> CreateAsync(CreateTicketDto dto, int requesterId)
@@ -129,8 +132,8 @@ public class TicketService : ITicketService
                 {
                     try
                     {
-                        // Delay to prevent Mailtrap rate-limiting
-                        await Task.Delay(1000);
+                        // Mailtrap delay disabled to keep ticket creation responsive.
+                        // await Task.Delay(1000);
                         await _emailService.SendEmailAsync(
                             approver.Email,
                             $"Action Required: Approve {category?.Name} Request",
@@ -143,6 +146,14 @@ public class TicketService : ITicketService
                 }
             }
         }
+
+        await _ticketRealtimeService.BroadcastTicketUpdatedAsync(new TicketRealtimeUpdateDto(
+            created.Id,
+            fullTicket?.Status?.Name ?? "Unknown",
+            fullTicket?.AssignedTechId,
+            fullTicket?.AssignedTech?.FullName,
+            DateTime.UtcNow
+        ));
 
         return MapToDto(fullTicket!);
     }
@@ -218,6 +229,40 @@ public class TicketService : ITicketService
             Timestamp = DateTime.UtcNow
         });
 
+        User? technician = await _userRepository.GetByIdAsync(technicianId);
+        string technicianName = technician?.FullName ?? "A technician";
+
+        if (!string.IsNullOrWhiteSpace(ticket.Requester?.Email))
+        {
+            try
+            {
+                string subject = $"Ticket #{ticket.Id} Assigned to {technicianName}";
+                string body = $@"<p>Your ticket has been picked up by <strong>{technicianName}</strong>.</p>
+<p><strong>Ticket:</strong> {ticket.Title}</p>
+<p>You can track progress here: <a href='http://localhost:5173/tickets/{ticket.Id}'>http://localhost:5173/tickets/{ticket.Id}</a></p>";
+
+                await _emailService.SendEmailAsync(ticket.Requester.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Take ticket email failed: {ex.Message}");
+            }
+        }
+
+        await _notificationService.SendNotificationAsync(
+            ticket.RequesterId,
+            $"Your ticket #{ticket.Id} is now in progress and assigned to {technicianName}.",
+            ticket.Id
+        );
+
+        await _ticketRealtimeService.BroadcastTicketUpdatedAsync(new TicketRealtimeUpdateDto(
+            ticket.Id,
+            "In Progress",
+            technicianId,
+            technician?.FullName,
+            DateTime.UtcNow
+        ));
+
         return true;
     }
 
@@ -256,6 +301,14 @@ public class TicketService : ITicketService
             }
         }
 
+        await _ticketRealtimeService.BroadcastTicketUpdatedAsync(new TicketRealtimeUpdateDto(
+            ticket.Id,
+            "Resolved",
+            ticket.AssignedTechId,
+            ticket.AssignedTech?.FullName,
+            DateTime.UtcNow
+        ));
+
         return true;
     }
 
@@ -277,6 +330,14 @@ public class TicketService : ITicketService
             Action = "Ticket cancelled by requester",
             Timestamp = DateTime.UtcNow
         });
+
+        await _ticketRealtimeService.BroadcastTicketUpdatedAsync(new TicketRealtimeUpdateDto(
+            ticket.Id,
+            "Cancelled",
+            ticket.AssignedTechId,
+            ticket.AssignedTech?.FullName,
+            DateTime.UtcNow
+        ));
 
         return true;
     }

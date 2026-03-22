@@ -1,3 +1,7 @@
+import type {
+  Ticket,
+  TicketRealtimeUpdate,
+} from "@/features/tickets/types/ticketTypes";
 import { useAuthStore } from "@/stores/authStore";
 import { notifications as mantineNotifications } from "@mantine/notifications";
 import {
@@ -82,6 +86,44 @@ export function SignalRManager() {
           }
         },
       });
+    });
+
+    connection.on("TicketUpdated", (update: TicketRealtimeUpdate) => {
+      queryClient.setQueryData<Ticket[]>(
+        ["tickets"],
+        (oldData) =>
+          oldData?.map((ticket) =>
+            ticket.id === update.ticketId
+              ? {
+                  ...ticket,
+                  status: update.status,
+                  assignedTechId: update.assignedTechId ?? undefined,
+                  assignedTechName: update.assignedTechName ?? undefined,
+                }
+              : ticket,
+          ) ?? oldData,
+      );
+
+      queryClient.setQueryData<Ticket>(
+        ["ticket", update.ticketId],
+        (oldData) =>
+          oldData
+            ? {
+                ...oldData,
+                status: update.status,
+                assignedTechId: update.assignedTechId ?? undefined,
+                assignedTechName: update.assignedTechName ?? undefined,
+              }
+            : oldData,
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: ["ticketHistory", update.ticketId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardActionRequired"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboardPieChart"] });
     });
 
     const startConnection = async () => {

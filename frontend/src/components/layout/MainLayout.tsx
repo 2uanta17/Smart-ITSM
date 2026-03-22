@@ -1,5 +1,6 @@
 import { getDashboardStats } from "@/features/dashboard/api/dashboardApi";
 import { useNotifications } from "@/features/notifications/hooks/useNotifications";
+import { formatLocalClockTime } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
   ActionIcon,
@@ -220,10 +221,7 @@ export function MainLayout() {
                               {n.message}
                             </Text>
                             <Text size="xs" c="dimmed" mt={4}>
-                              {new Date(n.createdAt).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {formatLocalClockTime(n.createdAt)}
                             </Text>
                           </UnstyledButton>
                           <Divider />

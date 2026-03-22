@@ -8,7 +8,12 @@ import {
   takeTicket,
 } from "@/features/tickets/api/ticketApi";
 import { useTicketCommentsSignalR } from "@/features/tickets/hooks/useTicketCommentsSignalR";
-import { formatLocalTime, getErrorMessage } from "@/lib/utils";
+import type { Ticket } from "@/features/tickets/types/ticketTypes";
+import {
+  formatLocalClockTime,
+  formatLocalTime,
+  getErrorMessage,
+} from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
   Avatar,
@@ -63,6 +68,10 @@ export const TicketDetailPage = () => {
 
   const handleSuccess = (message: string) => {
     queryClient.invalidateQueries({ queryKey: ["ticket", ticketId] });
+    queryClient.invalidateQueries({ queryKey: ["tickets"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboardActionRequired"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboardPieChart"] });
     queryClient.invalidateQueries({ queryKey: ["ticketHistory", ticketId] });
     notifications.show({ title: "Success", message, color: "green" });
   };
@@ -75,22 +84,118 @@ export const TicketDetailPage = () => {
     });
   };
 
+  const updateTicketCaches = (next: {
+    status?: string;
+    assignedTechId?: number;
+    assignedTechName?: string;
+  }) => {
+    queryClient.setQueryData<Ticket>(["ticket", ticketId], (old) =>
+      old
+        ? {
+            ...old,
+            ...next,
+          }
+        : old,
+    );
+
+    queryClient.setQueryData<Ticket[]>(
+      ["tickets"],
+      (old) =>
+        old?.map((item) =>
+          item.id === ticketId
+            ? {
+                ...item,
+                ...next,
+              }
+            : item,
+        ) ?? old,
+    );
+  };
+
   const takeMutation = useMutation({
     mutationFn: () => takeTicket(ticketId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["ticket", ticketId] });
+      await queryClient.cancelQueries({ queryKey: ["tickets"] });
+
+      const previousTicket = queryClient.getQueryData<Ticket>([
+        "ticket",
+        ticketId,
+      ]);
+      const previousTickets = queryClient.getQueryData<Ticket[]>(["tickets"]);
+
+      updateTicketCaches({
+        status: "In Progress",
+        assignedTechId: Number(user?.id),
+        assignedTechName: "You",
+      });
+
+      return { previousTicket, previousTickets };
+    },
     onSuccess: () => handleSuccess("You are now working on this ticket."),
-    onError: handleError,
+    onError: (error, _variables, context) => {
+      if (context?.previousTicket) {
+        queryClient.setQueryData(["ticket", ticketId], context.previousTicket);
+      }
+      if (context?.previousTickets) {
+        queryClient.setQueryData(["tickets"], context.previousTickets);
+      }
+      handleError(error);
+    },
   });
 
   const resolveMutation = useMutation({
     mutationFn: () => resolveTicket(ticketId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["ticket", ticketId] });
+      await queryClient.cancelQueries({ queryKey: ["tickets"] });
+
+      const previousTicket = queryClient.getQueryData<Ticket>([
+        "ticket",
+        ticketId,
+      ]);
+      const previousTickets = queryClient.getQueryData<Ticket[]>(["tickets"]);
+
+      updateTicketCaches({ status: "Resolved" });
+      return { previousTicket, previousTickets };
+    },
     onSuccess: () => handleSuccess("Ticket has been resolved."),
-    onError: handleError,
+    onError: (error, _variables, context) => {
+      if (context?.previousTicket) {
+        queryClient.setQueryData(["ticket", ticketId], context.previousTicket);
+      }
+      if (context?.previousTickets) {
+        queryClient.setQueryData(["tickets"], context.previousTickets);
+      }
+      handleError(error);
+    },
   });
 
   const cancelMutation = useMutation({
     mutationFn: () => cancelTicket(ticketId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["ticket", ticketId] });
+      await queryClient.cancelQueries({ queryKey: ["tickets"] });
+
+      const previousTicket = queryClient.getQueryData<Ticket>([
+        "ticket",
+        ticketId,
+      ]);
+      const previousTickets = queryClient.getQueryData<Ticket[]>(["tickets"]);
+
+      updateTicketCaches({ status: "Cancelled" });
+      return { previousTicket, previousTickets };
+    },
     onSuccess: () => handleSuccess("Ticket has been cancelled."),
-    onError: handleError,
+    onError: (error, _variables, context) => {
+      if (context?.previousTicket) {
+        queryClient.setQueryData(["ticket", ticketId], context.previousTicket);
+      }
+      if (context?.previousTickets) {
+        queryClient.setQueryData(["tickets"], context.previousTickets);
+      }
+      handleError(error);
+    },
   });
 
   const commentMutation = useMutation({
@@ -111,9 +216,13 @@ export const TicketDetailPage = () => {
 
   const getStatusColor = (status: string) => {
     if (status === "Open") return "green";
+    if (status === "Pending") return "orange";
+    if (status === "Pending Approval") return "violet";
+    if (status === "In Progress") return "yellow";
     if (status === "Resolved") return "blue";
+    if (status === "Cancelled") return "red";
     if (status === "Closed") return "gray";
-    return "yellow";
+    return "dark";
   };
 
   return (
@@ -259,14 +368,7 @@ export const TicketDetailPage = () => {
                             ta="right"
                             mt={4}
                           >
-                            {new Date(
-                              comment.createdAt.endsWith("Z")
-                                ? comment.createdAt
-                                : comment.createdAt + "Z",
-                            ).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
+                            {formatLocalClockTime(comment.createdAt)}
                           </Text>
                         </Paper>
                       </Group>

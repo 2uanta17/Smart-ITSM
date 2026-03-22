@@ -159,6 +159,7 @@ builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICommentRealtimeService, CommentRealtimeService>();
+builder.Services.AddScoped<ITicketRealtimeService, TicketRealtimeService>();
 builder.Services.AddSignalR();
 
 WebApplication app = builder.Build();

@@ -37,3 +37,11 @@ export interface TicketAuditLog {
   userName: string;
   timestamp: string;
 }
+
+export interface TicketRealtimeUpdate {
+  ticketId: number;
+  status: string;
+  assignedTechId: number | null;
+  assignedTechName?: string | null;
+  updatedAt: string;
+}
