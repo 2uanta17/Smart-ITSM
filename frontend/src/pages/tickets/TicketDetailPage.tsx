@@ -13,6 +13,7 @@ import {
   formatLocalClockTime,
   formatLocalTime,
   getErrorMessage,
+  getTicketStatusColor,
 } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -214,17 +215,6 @@ export const TicketDetailPage = () => {
   const isStaff = user?.role === "Admin" || user?.role === "Technician";
   const isAssignedToMe = ticket.assignedTechId === Number(user?.id);
 
-  const getStatusColor = (status: string) => {
-    if (status === "Open") return "green";
-    if (status === "Pending") return "orange";
-    if (status === "Pending Approval") return "violet";
-    if (status === "In Progress") return "yellow";
-    if (status === "Resolved") return "blue";
-    if (status === "Cancelled") return "red";
-    if (status === "Closed") return "gray";
-    return "dark";
-  };
-
   return (
     <div>
       <Button variant="subtle" mb="md" onClick={() => navigate("/app/tickets")}>
@@ -237,7 +227,7 @@ export const TicketDetailPage = () => {
             <Title order={3}>
               #{ticket.id} - {ticket.title}
             </Title>
-            <Badge size="lg" color={getStatusColor(ticket.status)}>
+            <Badge size="lg" color={getTicketStatusColor(ticket.status)}>
               {ticket.status}
             </Badge>
           </Group>

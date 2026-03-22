@@ -1,6 +1,6 @@
 import { getDashboardStats } from "@/features/dashboard/api/dashboardApi";
 import { useNotifications } from "@/features/notifications/hooks/useNotifications";
-import { formatLocalClockTime } from "@/lib/utils";
+import { formatLocalClockTime, getTicketStatusColor } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
   ActionIcon,
@@ -52,6 +52,7 @@ const navData: NavItem[] = [
 ];
 
 export function MainLayout() {
+  const openStatusColor = getTicketStatusColor("Open");
   const [opened, { toggle }] = useDisclosure();
   const [popoverOpened, setPopoverOpened] = useState(false);
   const { logout, user } = useAuthStore();
@@ -100,10 +101,26 @@ export function MainLayout() {
       return null;
     }
 
+    const isActive = location.pathname.startsWith(item.link);
+
     let rightSection = undefined;
     if (item.label === "Tickets" && stats && stats.openTickets > 0) {
       rightSection = (
-        <Badge color="red" size="sm" variant="filled" circle>
+        <Badge
+          color={openStatusColor}
+          size="sm"
+          variant="filled"
+          circle
+          style={
+            isActive
+              ? {
+                  backgroundColor: "white",
+                  color: `var(--mantine-color-${openStatusColor}-7)`,
+                  border: `1px solid var(--mantine-color-${openStatusColor}-7)`,
+                }
+              : undefined
+          }
+        >
           {stats.openTickets}
         </Badge>
       );
@@ -118,7 +135,7 @@ export function MainLayout() {
         variant="filled"
         fw={500}
         rightSection={rightSection}
-        active={location.pathname.startsWith(item.link)}
+        active={isActive}
         onClick={() => {
           if (opened) toggle();
         }}

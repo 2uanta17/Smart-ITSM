@@ -3,7 +3,11 @@ import {
   getDashboardPieChart,
   getDashboardStats,
 } from "@/features/dashboard/api/dashboardApi";
-import { formatLocalDate, getPriorityColor } from "@/lib/utils";
+import {
+  formatLocalDate,
+  getPriorityColor,
+  getTicketStatusColor,
+} from "@/lib/utils";
 import { PieChart } from "@mantine/charts";
 import {
   Badge,
@@ -23,6 +27,9 @@ const CHART_COLORS = ["blue.6", "teal.6", "grape.6", "orange.6", "yellow.6"];
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
+  const openStatusColor = getTicketStatusColor("Open");
+  const inProgressStatusColor = getTicketStatusColor("In Progress");
+  const resolvedStatusColor = getTicketStatusColor("Resolved");
 
   const {
     data: stats,
@@ -95,31 +102,51 @@ export const AdminDashboard = () => {
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 3 }}>
-          <Card padding="lg" radius="xs" withBorder bg="red.1">
-            <Text c="red.9" tt="uppercase" fw={700} size="xs">
+          <Card padding="lg" radius="xs" withBorder bg={`${openStatusColor}.1`}>
+            <Text c={`${openStatusColor}.9`} tt="uppercase" fw={700} size="xs">
               Open Tickets
             </Text>
-            <Text fw={700} size="xl" mt="sm" c="red.9">
+            <Text fw={700} size="xl" mt="sm" c={`${openStatusColor}.9`}>
               {stats?.openTickets || 0}
             </Text>
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 3 }}>
-          <Card padding="lg" radius="xs" withBorder bg="yellow.1">
-            <Text c="yellow.9" tt="uppercase" fw={700} size="xs">
+          <Card
+            padding="lg"
+            radius="xs"
+            withBorder
+            bg={`${inProgressStatusColor}.1`}
+          >
+            <Text
+              c={`${inProgressStatusColor}.9`}
+              tt="uppercase"
+              fw={700}
+              size="xs"
+            >
               In Progress
             </Text>
-            <Text fw={700} size="xl" mt="sm" c="yellow.9">
+            <Text fw={700} size="xl" mt="sm" c={`${inProgressStatusColor}.9`}>
               {stats?.inProgressTickets || 0}
             </Text>
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 3 }}>
-          <Card padding="lg" radius="xs" withBorder bg="green.1">
-            <Text c="green.9" tt="uppercase" fw={700} size="xs">
+          <Card
+            padding="lg"
+            radius="xs"
+            withBorder
+            bg={`${resolvedStatusColor}.1`}
+          >
+            <Text
+              c={`${resolvedStatusColor}.9`}
+              tt="uppercase"
+              fw={700}
+              size="xs"
+            >
               Resolved
             </Text>
-            <Text fw={700} size="xl" mt="sm" c="green.9">
+            <Text fw={700} size="xl" mt="sm" c={`${resolvedStatusColor}.9`}>
               {stats?.resolvedTickets || 0}
             </Text>
           </Card>
@@ -153,7 +180,7 @@ export const AdminDashboard = () => {
           <Paper withBorder p="md" radius="xs" h="100%">
             <Group justify="space-between" mb="md">
               <Title order={4}>Action Required</Title>
-              <Badge color="red" variant="light">
+              <Badge color={openStatusColor} variant="light">
                 {stats?.unassignedTickets || 0} Unassigned
               </Badge>
             </Group>

@@ -2,7 +2,7 @@ import {
   getDashboardRecent,
   getDashboardStats,
 } from "@/features/dashboard/api/dashboardApi";
-import { formatLocalTime } from "@/lib/utils";
+import { formatLocalTime, getTicketStatusColor } from "@/lib/utils";
 import {
   Card,
   Grid,
@@ -15,6 +15,9 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 export const RequesterDashboard = () => {
+  const openStatusColor = getTicketStatusColor("Open");
+  const inProgressStatusColor = getTicketStatusColor("In Progress");
+
   const {
     data: stats,
     isLoading: isLoadingStats,
@@ -61,21 +64,31 @@ export const RequesterDashboard = () => {
 
       <Grid mb="xl">
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Card padding="lg" radius="xs" withBorder bg="red.1">
-            <Text c="red.9" tt="uppercase" fw={700} size="xs">
+          <Card padding="lg" radius="xs" withBorder bg={`${openStatusColor}.1`}>
+            <Text c={`${openStatusColor}.9`} tt="uppercase" fw={700} size="xs">
               My Open Tickets
             </Text>
-            <Text fw={700} size="xl" mt="sm" c="red.9">
+            <Text fw={700} size="xl" mt="sm" c={`${openStatusColor}.9`}>
               {stats?.openTickets || 0}
             </Text>
           </Card>
         </Grid.Col>
         <Grid.Col span={{ base: 12, sm: 6 }}>
-          <Card padding="lg" radius="xs" withBorder bg="yellow.1">
-            <Text c="yellow.9" tt="uppercase" fw={700} size="xs">
+          <Card
+            padding="lg"
+            radius="xs"
+            withBorder
+            bg={`${inProgressStatusColor}.1`}
+          >
+            <Text
+              c={`${inProgressStatusColor}.9`}
+              tt="uppercase"
+              fw={700}
+              size="xs"
+            >
               Tickets In Progress
             </Text>
-            <Text fw={700} size="xl" mt="sm" c="yellow.9">
+            <Text fw={700} size="xl" mt="sm" c={`${inProgressStatusColor}.9`}>
               {stats?.inProgressTickets || 0}
             </Text>
           </Card>

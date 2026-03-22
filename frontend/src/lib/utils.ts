@@ -38,6 +38,27 @@ export const getPriorityColor = (priority: string) => {
   }
 };
 
+export const getTicketStatusColor = (status: string) => {
+  switch (status) {
+    case "Open":
+      return "green";
+    case "Pending":
+      return "orange";
+    case "Pending Approval":
+      return "violet";
+    case "In Progress":
+      return "yellow";
+    case "Resolved":
+      return "blue";
+    case "Cancelled":
+      return "red";
+    case "Closed":
+      return "gray";
+    default:
+      return "dark";
+  }
+};
+
 export const formatLocalTime = (dateString: string) => {
   if (!dateString) return "N/A";
 

@@ -3,7 +3,7 @@ import {
   getMyTickets,
   getTickets,
 } from "@/features/tickets/api/ticketApi";
-import { formatLocalDate } from "@/lib/utils";
+import { formatLocalDate, getTicketStatusColor } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
   Badge,
@@ -59,27 +59,6 @@ export const TicketListPage = () => {
     },
   });
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Open":
-        return "green";
-      case "Pending":
-        return "orange";
-      case "Pending Approval":
-        return "violet";
-      case "In Progress":
-        return "yellow";
-      case "Resolved":
-        return "blue";
-      case "Cancelled":
-        return "red";
-      case "Closed":
-        return "gray";
-      default:
-        return "dark";
-    }
-  };
-
   const rows = tickets.map((t) => (
     <Table.Tr
       key={t.id}
@@ -90,7 +69,7 @@ export const TicketListPage = () => {
       <Table.Td>{t.title}</Table.Td>
       <Table.Td>{t.categoryName}</Table.Td>
       <Table.Td>
-        <Badge color={getStatusColor(t.status)}>{t.status}</Badge>
+        <Badge color={getTicketStatusColor(t.status)}>{t.status}</Badge>
       </Table.Td>
       <Table.Td>{formatLocalDate(t.createdAt)}</Table.Td>
       <Table.Td>{t.dueDate ? formatLocalDate(t.dueDate) : "N/A"}</Table.Td>
