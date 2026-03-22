@@ -1,5 +1,9 @@
 import api from "@/lib/axios";
-import type { CreateDepartmentDto, Department } from "../types/departmentTypes";
+import type {
+  CreateDepartmentDto,
+  Department,
+  UpdateDepartmentDto,
+} from "../types/departmentTypes";
 
 export const getDepartments = async () => {
   const { data } = await api.get<Department[]>("/departments");
@@ -9,6 +13,16 @@ export const getDepartments = async () => {
 export const createDepartment = async (dto: CreateDepartmentDto) => {
   const { data } = await api.post<Department>("/departments", dto);
   return data;
+};
+
+export const updateDepartment = async ({
+  id,
+  data,
+}: {
+  id: number;
+  data: UpdateDepartmentDto;
+}): Promise<void> => {
+  await api.put(`/departments/${id}`, data);
 };
 
 export const deleteDepartment = async (id: number) => {

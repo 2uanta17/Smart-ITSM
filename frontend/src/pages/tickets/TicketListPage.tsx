@@ -3,6 +3,7 @@ import {
   getMyTickets,
   getTickets,
 } from "@/features/tickets/api/ticketApi";
+import api from "@/lib/axios";
 import { formatLocalDate, getTicketStatusColor } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -11,16 +12,31 @@ import {
   Group,
   LoadingOverlay,
   Paper,
+  Select,
   Table,
+  Text,
   Title,
 } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+interface Category {
+  id: number;
+  name: string;
+}
+
+const getCategories = async () => {
+  const { data } = await api.get<Category[]>("/categories");
+  return data;
+};
 
 export const TicketListPage = () => {
   const { user } = useAuthStore();
   const navigate = useNavigate();
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
   const isStaff = user?.role === "Admin" || user?.role === "Technician";
 
@@ -31,6 +47,44 @@ export const TicketListPage = () => {
     refetchOnWindowFocus: true,
     staleTime: 5000,
   });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+    staleTime: Infinity,
+  });
+
+  const categoryOptions = categories.map((category) => ({
+    value: category.name,
+    label: category.name,
+  }));
+
+  const statusOptions = useMemo(
+    () =>
+      Array.from(new Set(tickets.map((ticket) => ticket.status))).map(
+        (status) => ({
+          value: status,
+          label: status,
+        }),
+      ),
+    [tickets],
+  );
+
+  const filteredTickets = useMemo(
+    () =>
+      tickets.filter((ticket) => {
+        if (filterStatus && ticket.status !== filterStatus) {
+          return false;
+        }
+
+        if (filterCategory && ticket.categoryName !== filterCategory) {
+          return false;
+        }
+
+        return true;
+      }),
+    [tickets, filterStatus, filterCategory],
+  );
 
   const exportMutation = useMutation({
     mutationFn: exportTicketsCsv,
@@ -59,7 +113,7 @@ export const TicketListPage = () => {
     },
   });
 
-  const rows = tickets.map((t) => (
+  const rows = filteredTickets.map((t) => (
     <Table.Tr
       key={t.id}
       style={{ cursor: "pointer" }}
@@ -81,6 +135,22 @@ export const TicketListPage = () => {
       <Group justify="space-between" mb="lg">
         <Title order={2}>Tickets</Title>
         <Group>
+          <Select
+            placeholder="Filter by Status"
+            data={statusOptions}
+            value={filterStatus}
+            onChange={setFilterStatus}
+            clearable
+            w={200}
+          />
+          <Select
+            placeholder="Filter by Category"
+            data={categoryOptions}
+            value={filterCategory}
+            onChange={setFilterCategory}
+            clearable
+            w={200}
+          />
           {user?.role === "Admin" && (
             <Button
               variant="outline"
@@ -112,6 +182,11 @@ export const TicketListPage = () => {
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>
         </Table>
+        {!isLoading && filteredTickets.length === 0 && (
+          <Text ta="center" py="xl" c="dimmed">
+            No tickets found.
+          </Text>
+        )}
       </Paper>
     </div>
   );

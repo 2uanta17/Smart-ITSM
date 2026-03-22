@@ -1,30 +1,37 @@
-import { useState } from "react";
 import {
-  Table,
+  createDepartment,
+  deleteDepartment,
+  getDepartments,
+  updateDepartment,
+} from "@/features/departments/api/departmentApi";
+import { DepartmentModal } from "@/features/departments/components/DepartmentModal";
+import type {
+  CreateDepartmentDto,
+  Department,
+} from "@/features/departments/types/departmentTypes";
+import { getErrorMessage } from "@/lib/utils";
+import { useAuthStore } from "@/stores/authStore";
+import {
   Button,
   Group,
-  Title,
-  Modal,
-  Text,
-  Paper,
   LoadingOverlay,
+  Modal,
+  Paper,
+  Table,
+  Text,
+  Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getDepartments,
-  createDepartment,
-  deleteDepartment,
-} from "@/features/departments/api/departmentApi";
-import type { CreateDepartmentDto } from "@/features/departments/types/departmentTypes";
-import { DepartmentModal } from "@/features/departments/components/DepartmentModal";
-import { useAuthStore } from "@/stores/authStore";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 export const DepartmentsPage = () => {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
   const [opened, { open, close }] = useDisclosure(false);
+  const [selectedDepartment, setSelectedDepartment] =
+    useState<Department | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const {
@@ -45,12 +52,32 @@ export const DepartmentsPage = () => {
         message: "Department created",
         color: "green",
       });
-      close();
+      handleClose();
     },
-    onError: () => {
+    onError: (err) => {
       notifications.show({
         title: "Error",
-        message: "Failed to create",
+        message: getErrorMessage(err),
+        color: "red",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: updateDepartment,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      notifications.show({
+        title: "Success",
+        message: "Department updated",
+        color: "green",
+      });
+      handleClose();
+    },
+    onError: (err) => {
+      notifications.show({
+        title: "Error",
+        message: getErrorMessage(err),
         color: "red",
       });
     },
@@ -67,17 +94,36 @@ export const DepartmentsPage = () => {
       });
       setDeleteId(null);
     },
-    onError: () => {
+    onError: (err) => {
       notifications.show({
         title: "Error",
-        message: "Failed to delete",
+        message: getErrorMessage(err),
         color: "red",
       });
     },
   });
 
-  const handleCreate = (data: CreateDepartmentDto) => {
-    createMutation.mutate(data);
+  const handleOpenCreate = () => {
+    setSelectedDepartment(null);
+    open();
+  };
+
+  const handleOpenEdit = (department: Department) => {
+    setSelectedDepartment(department);
+    open();
+  };
+
+  const handleClose = () => {
+    setSelectedDepartment(null);
+    close();
+  };
+
+  const handleSubmit = (data: CreateDepartmentDto) => {
+    if (selectedDepartment) {
+      updateMutation.mutate({ id: selectedDepartment.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
   };
 
   const executeDelete = () => {
@@ -95,15 +141,25 @@ export const DepartmentsPage = () => {
       <Table.Td>{element.locationCode}</Table.Td>
       {isAdmin && (
         <Table.Td ta="center">
-          <Button
-            variant="light"
-            color="red"
-            size="compact-sm"
-            onClick={() => setDeleteId(element.id)}
-            disabled={deleteMutation.isPending && deleteId === element.id}
-          >
-            Delete
-          </Button>
+          <Group gap="xs" justify="center">
+            <Button
+              variant="light"
+              size="compact-sm"
+              onClick={() => handleOpenEdit(element)}
+              disabled={updateMutation.isPending}
+            >
+              Edit
+            </Button>
+            <Button
+              variant="light"
+              color="red"
+              size="compact-sm"
+              onClick={() => setDeleteId(element.id)}
+              disabled={deleteMutation.isPending && deleteId === element.id}
+            >
+              Delete
+            </Button>
+          </Group>
         </Table.Td>
       )}
     </Table.Tr>
@@ -115,7 +171,7 @@ export const DepartmentsPage = () => {
     <div>
       <Group justify="space-between" mb="lg">
         <Title order={2}>Departments</Title>
-        {isAdmin && <Button onClick={open}>Add Department</Button>}
+        {isAdmin && <Button onClick={handleOpenCreate}>Add Department</Button>}
       </Group>
 
       <Paper p="xs" withBorder pos="relative">
@@ -128,7 +184,7 @@ export const DepartmentsPage = () => {
               <Table.Th>Name</Table.Th>
               <Table.Th>Location</Table.Th>
               {isAdmin && (
-                <Table.Th w={100} ta="center">
+                <Table.Th w={180} ta="center">
                   Actions
                 </Table.Th>
               )}
@@ -146,8 +202,11 @@ export const DepartmentsPage = () => {
 
       <DepartmentModal
         opened={opened}
-        onClose={close}
-        onSubmit={handleCreate}
+        onClose={handleClose}
+        onSubmit={handleSubmit}
+        isLoading={createMutation.isPending || updateMutation.isPending}
+        initialData={selectedDepartment}
+        isEditing={!!selectedDepartment}
       />
 
       <Modal

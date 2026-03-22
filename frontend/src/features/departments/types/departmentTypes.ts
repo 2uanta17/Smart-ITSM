@@ -9,4 +9,7 @@ export interface CreateDepartmentDto {
   locationCode: string;
 }
 
-export type UpdateDepartmentDto = Partial<CreateDepartmentDto>;
+export interface UpdateDepartmentDto {
+  name: string;
+  locationCode: string;
+}
