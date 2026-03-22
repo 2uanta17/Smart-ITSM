@@ -80,6 +80,7 @@ export function ForgotPasswordForm() {
                 onClick={() => navigate("/auth/login")}
                 size="sm"
                 component="button"
+                type="button"
                 c="blue"
               >
                 Back to Login
@@ -116,6 +117,7 @@ export function ForgotPasswordForm() {
                   onClick={() => navigate("/auth/login")}
                   size="sm"
                   component="button"
+                  type="button"
                   c="blue"
                 >
                   Back to Login

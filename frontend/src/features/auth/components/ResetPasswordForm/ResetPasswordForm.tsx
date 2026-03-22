@@ -57,6 +57,7 @@ export function ResetPasswordForm({ email, token }: ResetPasswordFormProps) {
               onClick={() => navigate("/auth/login")}
               size="sm"
               component="button"
+              type="button"
               c="blue"
             >
               Back to Login
@@ -154,6 +155,7 @@ export function ResetPasswordForm({ email, token }: ResetPasswordFormProps) {
                   onClick={() => navigate("/auth/login")}
                   size="sm"
                   component="button"
+                  type="button"
                   c="blue"
                 >
                   Back to Login

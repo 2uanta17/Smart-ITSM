@@ -81,6 +81,7 @@ export function LoginForm() {
                 onClick={() => navigate("/auth/forgot-password")}
                 size="sm"
                 component="button"
+                type="button"
                 c="blue"
               >
                 Forgot password?
