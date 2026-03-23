@@ -24,7 +24,7 @@ export const RequesterDashboard = () => {
     isError: isErrorStats,
   } = useQuery({
     queryKey: ["dashboardStats"],
-    queryFn: getDashboardStats,
+    queryFn: () => getDashboardStats(),
   });
 
   const { data: recent = [], isLoading: isLoadingRecent } = useQuery({

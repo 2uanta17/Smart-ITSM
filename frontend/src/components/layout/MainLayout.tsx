@@ -43,7 +43,7 @@ const navData: NavItem[] = [
     link: "/app/departments",
     allowedRoles: ["Admin", "Technician"],
   },
-  { label: "Users", link: "/app/users", allowedRoles: ["Admin"] },
+  { label: "Users", link: "/app/users", allowedRoles: ["Admin", "Technician"] },
   {
     label: "Assets",
     link: "/app/assets",
@@ -64,7 +64,7 @@ export function MainLayout() {
 
   const { data: stats } = useQuery({
     queryKey: ["dashboardStats"],
-    queryFn: getDashboardStats,
+    queryFn: () => getDashboardStats(),
     enabled: !!user,
     refetchInterval: 30000,
   });

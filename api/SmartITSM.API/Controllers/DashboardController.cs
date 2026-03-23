@@ -28,30 +28,39 @@ public class DashboardController : ControllerBase
     }
 
     [HttpGet("stats")]
-    public async Task<ActionResult<DashboardSummaryDto>> GetStats()
+    public async Task<ActionResult<DashboardSummaryDto>> GetStats(
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate)
     {
         var (userId, role) = GetUserDetails();
-        return Ok(await _dashboardService.GetSummaryAsync(userId, role));
+        return Ok(await _dashboardService.GetSummaryAsync(userId, role, startDate, endDate));
     }
 
     [HttpGet("pie-chart")]
-    public async Task<ActionResult<IEnumerable<CategoryDistributionDto>>> GetPieChart()
+    public async Task<ActionResult<IEnumerable<CategoryDistributionDto>>> GetPieChart(
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate)
     {
         var (userId, role) = GetUserDetails();
-        return Ok(await _dashboardService.GetCategoryDistributionAsync(userId, role));
+        return Ok(await _dashboardService.GetCategoryDistributionAsync(userId, role, startDate, endDate));
     }
 
     [HttpGet("recent")]
-    public async Task<ActionResult<IEnumerable<RecentActivityDto>>> GetRecentActivity([FromQuery] int count = 10)
+    public async Task<ActionResult<IEnumerable<RecentActivityDto>>> GetRecentActivity(
+        [FromQuery] int count = 10,
+        [FromQuery] DateTime? startDate = null,
+        [FromQuery] DateTime? endDate = null)
     {
         var (userId, role) = GetUserDetails();
-        return Ok(await _dashboardService.GetRecentActivityAsync(count, userId, role));
+        return Ok(await _dashboardService.GetRecentActivityAsync(count, userId, role, startDate, endDate));
     }
 
     [HttpGet("action-required")]
     [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Technician}")]
-    public async Task<ActionResult<IEnumerable<ActionRequiredTicketDto>>> GetActionRequired()
+    public async Task<ActionResult<IEnumerable<ActionRequiredTicketDto>>> GetActionRequired(
+        [FromQuery] DateTime? startDate,
+        [FromQuery] DateTime? endDate)
     {
-        return Ok(await _dashboardService.GetActionRequiredTicketsAsync());
+        return Ok(await _dashboardService.GetActionRequiredTicketsAsync(startDate, endDate));
     }
 }

@@ -132,7 +132,17 @@ export const TicketListPage = () => {
       <Table.Td>{t.title}</Table.Td>
       <Table.Td>{t.categoryName}</Table.Td>
       <Table.Td>
-        <Badge color={getTicketStatusColor(t.status)}>{t.status}</Badge>
+        <Group gap="xs">
+          <Badge color={getTicketStatusColor(t.status)}>{t.status}</Badge>
+          {t.dueDate &&
+            new Date(t.dueDate) <= new Date() &&
+            t.status !== "Resolved" &&
+            t.status !== "Cancelled" && (
+              <Badge color="red" variant="light" size="sm">
+                Overdue
+              </Badge>
+            )}
+        </Group>
       </Table.Td>
       <Table.Td>{formatLocalDate(t.createdAt)}</Table.Td>
       <Table.Td>{t.dueDate ? formatLocalDate(t.dueDate) : "N/A"}</Table.Td>

@@ -3,6 +3,7 @@ import type {
   TicketRealtimeUpdate,
 } from "@/features/tickets/types/ticketTypes";
 import { useAuthStore } from "@/stores/authStore";
+import { Button, Group, Text } from "@mantine/core";
 import { notifications as mantineNotifications } from "@mantine/notifications";
 import {
   HttpTransportType,
@@ -22,6 +23,43 @@ export function SignalRManager() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const user = useAuthStore((state) => state.user);
   const connectionRef = useRef<HubConnection | null>(null);
+
+  const openNotificationTarget = (notification: NotificationDto) => {
+    if (!notification.relatedTicketId) {
+      return;
+    }
+
+    mantineNotifications.hide(`notif-${notification.id}`);
+
+    if (notification.message.toLowerCase().includes("approval")) {
+      if (user?.role === "Admin") {
+        navigate("/app/approvals");
+      } else {
+        navigate(`/app/tickets/${notification.relatedTicketId}`);
+      }
+    } else {
+      navigate(`/app/tickets/${notification.relatedTicketId}`);
+    }
+
+    markNotificationAsRead(notification.id)
+      .then(() => {
+        queryClient.setQueryData<NotificationDto[]>(
+          ["notifications", "latest"],
+          (oldData) =>
+            oldData?.map((n) =>
+              String(n.id) === String(notification.id)
+                ? { ...n, isRead: true }
+                : n,
+            ) || [],
+        );
+        queryClient.invalidateQueries({
+          queryKey: ["notifications", "latest"],
+        });
+      })
+      .catch((error) =>
+        console.error("Failed to mark notification as read", error),
+      );
+  };
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -48,43 +86,23 @@ export function SignalRManager() {
       mantineNotifications.show({
         id: `notif-${notification.id}`,
         title: "New Update",
-        message: notification.message,
+        message: (
+          <Group justify="space-between" align="center" wrap="nowrap">
+            <Text size="sm" mr="sm">
+              {notification.message}
+            </Text>
+            {notification.relatedTicketId && (
+              <Button
+                size="compact-xs"
+                variant="light"
+                onClick={() => openNotificationTarget(notification)}
+              >
+                Open
+              </Button>
+            )}
+          </Group>
+        ),
         color: "blue",
-        styles: { root: { cursor: "pointer" } },
-        onClick: () => {
-          if (notification.relatedTicketId) {
-            mantineNotifications.hide(`notif-${notification.id}`);
-
-            if (notification.message.toLowerCase().includes("approval")) {
-              if (user?.role === "Admin") {
-                navigate("/app/approvals");
-              } else {
-                navigate(`/app/tickets/${notification.relatedTicketId}`);
-              }
-            } else {
-              navigate(`/app/tickets/${notification.relatedTicketId}`);
-            }
-
-            markNotificationAsRead(notification.id)
-              .then(() => {
-                queryClient.setQueryData<NotificationDto[]>(
-                  ["notifications", "latest"],
-                  (oldData) =>
-                    oldData?.map((n) =>
-                      String(n.id) === String(notification.id)
-                        ? { ...n, isRead: true }
-                        : n,
-                    ) || [],
-                );
-                queryClient.invalidateQueries({
-                  queryKey: ["notifications", "latest"],
-                });
-              })
-              .catch((error) =>
-                console.error("Failed to mark notification as read", error),
-              );
-          }
-        },
       });
     });
 

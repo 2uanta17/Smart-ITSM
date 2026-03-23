@@ -8,7 +8,7 @@ namespace SmartITSM.API.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = AppRoles.Admin)]
+[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Technician}")]
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;

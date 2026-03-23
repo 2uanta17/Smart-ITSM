@@ -98,10 +98,14 @@ public class TicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<Dictionary<string, int>> GetStatusCountsAsync(int? requesterId = null)
+    public async Task<Dictionary<string, int>> GetStatusCountsAsync(
+        int? requesterId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
     {
         var query = _context.Tickets.AsQueryable();
         if (requesterId.HasValue) query = query.Where(t => t.RequesterId == requesterId.Value);
+        query = ApplyDashboardWindow(query, startDate, endDate);
 
         return await query
             .GroupBy(t => t.Status!.Name)
@@ -109,10 +113,14 @@ public class TicketRepository : ITicketRepository
             .ToDictionaryAsync(x => x.Status, x => x.Count);
     }
 
-    public async Task<Dictionary<string, int>> GetCategoryCountsAsync(int? requesterId = null)
+    public async Task<Dictionary<string, int>> GetCategoryCountsAsync(
+        int? requesterId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
     {
         var query = _context.Tickets.AsQueryable();
         if (requesterId.HasValue) query = query.Where(t => t.RequesterId == requesterId.Value);
+        query = ApplyDashboardWindow(query, startDate, endDate);
 
         return await query
             .GroupBy(t => t.Category!.Name)
@@ -120,7 +128,11 @@ public class TicketRepository : ITicketRepository
             .ToDictionaryAsync(x => x.Category, x => x.Count);
     }
 
-    public async Task<IEnumerable<AuditLog>> GetRecentActivityAsync(int count, int? userId = null)
+    public async Task<IEnumerable<AuditLog>> GetRecentActivityAsync(
+        int count,
+        int? userId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
     {
         var query = _context.AuditLogs
             .Include(al => al.Ticket)
@@ -128,6 +140,8 @@ public class TicketRepository : ITicketRepository
             .AsQueryable();
 
         if (userId.HasValue) query = query.Where(al => al.Ticket.RequesterId == userId.Value);
+        if (startDate.HasValue) query = query.Where(al => al.Timestamp >= startDate.Value);
+        if (endDate.HasValue) query = query.Where(al => al.Timestamp <= endDate.Value);
 
         return await query
             .OrderByDescending(al => al.Timestamp)
@@ -135,19 +149,53 @@ public class TicketRepository : ITicketRepository
             .ToListAsync();
     }
 
-    public async Task<int> GetUnassignedTicketsCountAsync()
+    public async Task<int> GetUnassignedTicketsCountAsync(DateTime? startDate = null, DateTime? endDate = null)
     {
-        return await _context.Tickets
-            .CountAsync(t => t.AssignedTechId == null && t.StatusId != 5);
+        var query = _context.Tickets
+            .Where(t => t.AssignedTechId == null && t.StatusId != 5);
+
+        query = ApplyDashboardWindow(query, startDate, endDate);
+
+        return await query.CountAsync();
     }
 
-    public async Task<IEnumerable<Ticket>> GetUnassignedTicketsAsync(int count)
+    public async Task<IEnumerable<Ticket>> GetUnassignedTicketsAsync(
+        int count,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
     {
-        return await _context.Tickets
+        var query = _context.Tickets
             .Include(t => t.Status)
             .Where(t => t.AssignedTechId == null && t.StatusId != 5)
+            .AsQueryable();
+
+        query = ApplyDashboardWindow(query, startDate, endDate);
+
+        return await query
             .OrderBy(t => t.CreatedAt)
             .Take(count)
             .ToListAsync();
+    }
+
+    private IQueryable<Ticket> ApplyDashboardWindow(
+        IQueryable<Ticket> query,
+        DateTime? startDate,
+        DateTime? endDate)
+    {
+        if (!startDate.HasValue && !endDate.HasValue)
+        {
+            return query;
+        }
+
+        DateTime start = startDate ?? DateTime.MinValue;
+        DateTime end = endDate ?? DateTime.MaxValue;
+
+        return query.Where(t =>
+            (t.CreatedAt >= start && t.CreatedAt <= end) ||
+            (t.ResolvedAt.HasValue && t.ResolvedAt.Value >= start && t.ResolvedAt.Value <= end) ||
+            _context.AuditLogs.Any(al =>
+                al.TicketId == t.Id &&
+                al.Timestamp >= start &&
+                al.Timestamp <= end));
     }
 }

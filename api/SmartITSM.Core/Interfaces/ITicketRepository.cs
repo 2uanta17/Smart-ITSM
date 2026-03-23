@@ -14,9 +14,22 @@ public interface ITicketRepository
     Task<TicketComment> AddCommentAsync(TicketComment comment);
     Task<AuditLog> AddAuditLogAsync(AuditLog log);
     Task<IEnumerable<AuditLog>> GetAuditLogsAsync(int ticketId);
-    Task<Dictionary<string, int>> GetStatusCountsAsync(int? requesterId = null);
-    Task<Dictionary<string, int>> GetCategoryCountsAsync(int? requesterId = null);
-    Task<IEnumerable<AuditLog>> GetRecentActivityAsync(int count, int? userId = null);
-    Task<int> GetUnassignedTicketsCountAsync();
-    Task<IEnumerable<Ticket>> GetUnassignedTicketsAsync(int count);
+    Task<Dictionary<string, int>> GetStatusCountsAsync(
+        int? requesterId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null);
+
+    Task<Dictionary<string, int>> GetCategoryCountsAsync(
+        int? requesterId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null);
+
+    Task<IEnumerable<AuditLog>> GetRecentActivityAsync(
+        int count,
+        int? userId = null,
+        DateTime? startDate = null,
+        DateTime? endDate = null);
+
+    Task<int> GetUnassignedTicketsCountAsync(DateTime? startDate = null, DateTime? endDate = null);
+    Task<IEnumerable<Ticket>> GetUnassignedTicketsAsync(int count, DateTime? startDate = null, DateTime? endDate = null);
 }

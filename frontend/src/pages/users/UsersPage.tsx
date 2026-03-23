@@ -101,7 +101,10 @@ export const UsersPage = () => {
 
   const handleSubmit = (data: CreateUserDto | UpdateUserDto) => {
     if (selectedUser) {
-      updateMutation.mutate({ id: selectedUser.id, data: data as UpdateUserDto });
+      updateMutation.mutate({
+        id: selectedUser.id,
+        data: data as UpdateUserDto,
+      });
       return;
     }
 
@@ -152,17 +155,19 @@ export const UsersPage = () => {
       <Table.Td>{u.email}</Table.Td>
       <Table.Td>{u.role}</Table.Td>
       <Table.Td>{u.departmentName}</Table.Td>
-      <Table.Td ta="center">
-        <Button variant="light" size="compact-sm" onClick={() => handleEditOpen(u)}>
-          Edit
-        </Button>
-      </Table.Td>
+      {currentUser?.role === "Admin" && (
+        <Table.Td ta="center">
+          <Button
+            variant="light"
+            size="compact-sm"
+            onClick={() => handleEditOpen(u)}
+          >
+            Edit
+          </Button>
+        </Table.Td>
+      )}
     </Table.Tr>
   ));
-
-  if (currentUser?.role !== "Admin") {
-    return <Text c="red">You are not authorized to view this page.</Text>;
-  }
 
   if (isError) return <Text c="red">Error loading data.</Text>;
 
@@ -170,7 +175,9 @@ export const UsersPage = () => {
     <div>
       <Group justify="space-between" mb="lg">
         <Title order={2}>Users</Title>
-        <Button onClick={handleCreateOpen}>Add User</Button>
+        {currentUser?.role === "Admin" && (
+          <Button onClick={handleCreateOpen}>Add User</Button>
+        )}
       </Group>
 
       <Group mb="md" grow>
@@ -206,9 +213,11 @@ export const UsersPage = () => {
               <Table.Th>Email</Table.Th>
               <Table.Th>Role</Table.Th>
               <Table.Th>Department</Table.Th>
-              <Table.Th w={130} ta="center">
-                Actions
-              </Table.Th>
+              {currentUser?.role === "Admin" && (
+                <Table.Th w={130} ta="center">
+                  Actions
+                </Table.Th>
+              )}
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>{rows}</Table.Tbody>

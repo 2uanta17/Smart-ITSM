@@ -30,10 +30,10 @@ export const AppRoutes = () => {
             element={<ProtectedRoute allowedRoles={["Admin", "Technician"]} />}
           >
             <Route path="departments" element={<DepartmentsPage />} />
+            <Route path="users" element={<UsersPage />} />
             <Route path="assets" element={<AssetsPage />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
-            <Route path="users" element={<UsersPage />} />
             <Route path="approvals" element={<ApprovalsPage />} />
           </Route>
         </Route>
