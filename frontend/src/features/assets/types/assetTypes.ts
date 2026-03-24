@@ -21,6 +21,7 @@ export interface CreateAssetDto {
   serialNum: string;
   typeId: number;
   assignedUserId?: number | null;
+  status?: string;
 }
 
 export interface UpdateAssetDto {
@@ -28,4 +29,5 @@ export interface UpdateAssetDto {
   serialNum: string;
   typeId: number;
   assignedUserId?: number | null;
+  status?: string;
 }

@@ -24,6 +24,7 @@ public class CreateAssetDto
     [Required]
     public int TypeId { get; set; }
     public int? AssignedUserId { get; set; }
+    public string? Status { get; set; }
 }
 
 public class UpdateAssetDto
@@ -32,6 +33,7 @@ public class UpdateAssetDto
     public string SerialNum { get; set; } = string.Empty;
     public int TypeId { get; set; }
     public int? AssignedUserId { get; set; }
+    public string? Status { get; set; }
 }
 
 public class AssignAssetDto

@@ -164,6 +164,10 @@ builder.Services.AddSignalR();
 
 WebApplication app = builder.Build();
 
+var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Microsoft.AspNetCore.Identity.IdentityUser>();
+var myHash = hasher.HashPassword(null, "Pass@123");
+Console.WriteLine($"\n\nMY HASH: {myHash}\n\n");
+
 string uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 if (!Directory.Exists(uploadsPath))
 {

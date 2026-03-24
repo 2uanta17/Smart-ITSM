@@ -39,7 +39,11 @@ public class AssetService : IAssetService
             TypeId = dto.TypeId
         };
         
-        if (dto.AssignedUserId.HasValue)
+        if (!string.IsNullOrEmpty(dto.Status))
+        {
+            asset.Status = Enum.Parse<AssetStatus>(dto.Status);
+        }
+        else if (dto.AssignedUserId.HasValue)
         {
             asset.AssignedUserId = dto.AssignedUserId;
             asset.Status = AssetStatus.InUse;
@@ -67,13 +71,31 @@ public class AssetService : IAssetService
             if (dto.AssignedUserId.HasValue)
             {
                 asset.AssignedUserId = dto.AssignedUserId;
-                asset.Status = AssetStatus.InUse;
+                if (!string.IsNullOrEmpty(dto.Status))
+                {
+                    asset.Status = Enum.Parse<AssetStatus>(dto.Status);
+                }
+                else
+                {
+                    asset.Status = AssetStatus.InUse;
+                }
             }
             else
             {
                 asset.AssignedUserId = null;
-                asset.Status = AssetStatus.InStock;
+                if (!string.IsNullOrEmpty(dto.Status))
+                {
+                    asset.Status = Enum.Parse<AssetStatus>(dto.Status);
+                }
+                else
+                {
+                    asset.Status = AssetStatus.InStock;
+                }
             }
+        }
+        else if (!string.IsNullOrEmpty(dto.Status))
+        {
+            asset.Status = Enum.Parse<AssetStatus>(dto.Status);
         }
 
         await _repository.UpdateAsync(asset);

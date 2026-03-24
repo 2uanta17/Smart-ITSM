@@ -1,18 +1,18 @@
-import {
-  Modal,
-  Button,
-  TextInput,
-  Select,
-  LoadingOverlay,
-} from "@mantine/core";
-import { useForm, Controller } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useQuery } from "@tanstack/react-query";
 import { getUsers } from "@/features/users/api/userApi";
-import type { CreateAssetDto, Asset } from "../types/assetTypes";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Button,
+  LoadingOverlay,
+  Modal,
+  Select,
+  TextInput,
+} from "@mantine/core";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
+import { z } from "zod";
 import { getAssetTypes } from "../api/assetApi";
+import type { Asset, CreateAssetDto } from "../types/assetTypes";
 
 type AssetFormValues = z.infer<typeof schema>;
 
@@ -22,6 +22,7 @@ const schema = z.object({
   serialNum: z.string().optional(),
   typeId: z.string().min(1, "Type is required"),
   assignedUserId: z.string().nullable().optional(),
+  status: z.string().optional(),
 });
 
 interface Props {
@@ -55,6 +56,7 @@ export const AssetModal = ({
       serialNum: "",
       typeId: "",
       assignedUserId: null as string | null,
+      status: "InStock",
     },
   });
 
@@ -79,6 +81,14 @@ export const AssetModal = ({
     label: `${u.fullName} (${u.role})`,
   }));
 
+  const statusOptions = [
+    { value: "InStock", label: "In Stock" },
+    { value: "InUse", label: "In Use" },
+    { value: "Retired", label: "Retired" },
+    { value: "Maintenance", label: "Maintenance" },
+    { value: "Broken", label: "Broken" },
+  ];
+
   useEffect(() => {
     if (initialData) {
       reset({
@@ -87,6 +97,7 @@ export const AssetModal = ({
         serialNum: initialData.serialNum || "",
         typeId: initialData.typeId.toString(),
         assignedUserId: initialData.assignedUserId?.toString() || null,
+        status: initialData.status || "InStock",
       });
     } else {
       reset({
@@ -95,6 +106,7 @@ export const AssetModal = ({
         serialNum: "",
         typeId: "1",
         assignedUserId: null,
+        status: "InStock",
       });
     }
   }, [initialData, opened, reset]);
@@ -105,6 +117,7 @@ export const AssetModal = ({
       serialNum: data.serialNum || "",
       typeId: Number(data.typeId),
       assignedUserId: data.assignedUserId ? Number(data.assignedUserId) : null,
+      status: data.status,
     });
   };
 
@@ -160,6 +173,19 @@ export const AssetModal = ({
               clearable
               {...field}
               error={errors.assignedUserId?.message as string}
+              mb="md"
+            />
+          )}
+        />
+        <Controller
+          name="status"
+          control={control}
+          render={({ field }) => (
+            <Select
+              label="Status"
+              data={statusOptions}
+              {...field}
+              error={errors.status?.message as string}
               mb="md"
             />
           )}
