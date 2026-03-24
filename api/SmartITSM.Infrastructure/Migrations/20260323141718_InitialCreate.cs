@@ -3,12 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
-
 namespace SmartITSM.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -33,7 +31,8 @@ namespace SmartITSM.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    DefaultPriority = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                    DefaultPriority = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    RequiresApproval = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -67,6 +66,21 @@ namespace SmartITSM.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Roles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SlaPolicies",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PriorityLevel = table.Column<int>(type: "int", nullable: false),
+                    MaxResponseHours = table.Column<int>(type: "int", nullable: false),
+                    MaxResolveHours = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SlaPolicies", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -253,6 +267,30 @@ namespace SmartITSM.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false),
+                    IsSeen = table.Column<bool>(type: "bit", nullable: false),
+                    RelatedTicketId = table.Column<int>(type: "int", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Notifications_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Tickets",
                 columns: table => new
                 {
@@ -265,6 +303,8 @@ namespace SmartITSM.Infrastructure.Migrations
                     CategoryId = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     ResolvedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    DueDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    AttachmentPath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     RequesterId = table.Column<int>(type: "int", nullable: false),
                     AssignedTechId = table.Column<int>(type: "int", nullable: true),
                     RelatedAssetId = table.Column<int>(type: "int", nullable: true)
@@ -302,63 +342,101 @@ namespace SmartITSM.Infrastructure.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.InsertData(
-                table: "AssetTypes",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
+            migrationBuilder.CreateTable(
+                name: "ApprovalRequests",
+                columns: table => new
                 {
-                    { 1, "Laptop" },
-                    { 2, "Desktop" },
-                    { 3, "Printer" },
-                    { 4, "Server" }
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TicketId = table.Column<int>(type: "int", nullable: false),
+                    ApproverId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    Reason = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ResolvedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ApprovalRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ApprovalRequests_Tickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "Tickets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ApprovalRequests_Users_ApproverId",
+                        column: x => x.ApproverId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Categories",
-                columns: new[] { "Id", "DefaultPriority", "Name" },
-                values: new object[,]
+            migrationBuilder.CreateTable(
+                name: "AuditLogs",
+                columns: table => new
                 {
-                    { 1, "Medium", "Hardware" },
-                    { 2, "Low", "Software" },
-                    { 3, "High", "Network" }
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TicketId = table.Column<int>(type: "int", nullable: false),
+                    Action = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AuditLogs_Tickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "Tickets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_AuditLogs_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.InsertData(
-                table: "Departments",
-                columns: new[] { "Id", "LocationCode", "Name" },
-                values: new object[] { 1, "HQ-L1", "IT Support" });
-
-            migrationBuilder.InsertData(
-                table: "Roles",
-                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[,]
+            migrationBuilder.CreateTable(
+                name: "TicketComments",
+                columns: table => new
                 {
-                    { 1, null, "Admin", "ADMIN" },
-                    { 2, null, "Technician", "TECHNICIAN" },
-                    { 3, null, "Requester", "REQUESTER" }
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TicketId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    Content = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TicketComments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TicketComments_Tickets_TicketId",
+                        column: x => x.TicketId,
+                        principalTable: "Tickets",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_TicketComments_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.InsertData(
-                table: "TicketStatuses",
-                columns: new[] { "Id", "Name" },
-                values: new object[,]
-                {
-                    { 1, "Open" },
-                    { 2, "Pending" },
-                    { 3, "In Progress" },
-                    { 4, "Resolved" },
-                    { 5, "Closed" }
-                });
+            migrationBuilder.CreateIndex(
+                name: "IX_ApprovalRequests_ApproverId",
+                table: "ApprovalRequests",
+                column: "ApproverId");
 
-            migrationBuilder.InsertData(
-                table: "Users",
-                columns: new[] { "Id", "AccessFailedCount", "ConcurrencyStamp", "DepartmentId", "Email", "EmailConfirmed", "FullName", "IsActive", "LockoutEnabled", "LockoutEnd", "NormalizedEmail", "NormalizedUserName", "PasswordHash", "PhoneNumber", "PhoneNumberConfirmed", "SecurityStamp", "TwoFactorEnabled", "UserName" },
-                values: new object[] { 1, 0, "a45510d8-5546-41f3-ac46-6dd055b5d7a4", 1, "admin@mail.com", true, "System Admin", true, false, null, "ADMIN@MAIL.COM", "ADMIN@MAIL.COM", "AQAAAAIAAYagAAAAEKPo1Y+cJPG2O5gIEWqfy4P2SDqzIJGyLGoynxHB62rLBPnwHXyBHCQLkL11Er1ltQ==", null, false, "2b78457c-9653-4705-804f-58ca658586a5", false, "admin@mail.com" });
-
-            migrationBuilder.InsertData(
-                table: "AspNetUserRoles",
-                columns: new[] { "RoleId", "UserId" },
-                values: new object[] { 1, 1 });
+            migrationBuilder.CreateIndex(
+                name: "IX_ApprovalRequests_TicketId",
+                table: "ApprovalRequests",
+                column: "TicketId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -391,11 +469,36 @@ namespace SmartITSM.Infrastructure.Migrations
                 column: "TypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AuditLogs_TicketId",
+                table: "AuditLogs",
+                column: "TicketId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AuditLogs_UserId",
+                table: "AuditLogs",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_UserId",
+                table: "Notifications",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "RoleNameIndex",
                 table: "Roles",
                 column: "NormalizedName",
                 unique: true,
                 filter: "[NormalizedName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TicketComments_TicketId",
+                table: "TicketComments",
+                column: "TicketId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_TicketComments_UserId",
+                table: "TicketComments",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tickets_AssignedTechId",
@@ -444,6 +547,9 @@ namespace SmartITSM.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
+                name: "ApprovalRequests");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
             migrationBuilder.DropTable(
@@ -459,10 +565,22 @@ namespace SmartITSM.Infrastructure.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Tickets");
+                name: "AuditLogs");
+
+            migrationBuilder.DropTable(
+                name: "Notifications");
+
+            migrationBuilder.DropTable(
+                name: "SlaPolicies");
+
+            migrationBuilder.DropTable(
+                name: "TicketComments");
 
             migrationBuilder.DropTable(
                 name: "Roles");
+
+            migrationBuilder.DropTable(
+                name: "Tickets");
 
             migrationBuilder.DropTable(
                 name: "Assets");

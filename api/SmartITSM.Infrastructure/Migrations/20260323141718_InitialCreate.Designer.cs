@@ -12,8 +12,8 @@ using SmartITSM.Infrastructure.Data;
 namespace SmartITSM.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260310143316_AddNotificationEntity")]
-    partial class AddNotificationEntity
+    [Migration("20260323141718_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -53,26 +53,6 @@ namespace SmartITSM.Infrastructure.Migrations
                         .HasFilter("[NormalizedName] IS NOT NULL");
 
                     b.ToTable("Roles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Admin",
-                            NormalizedName = "ADMIN"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Technician",
-                            NormalizedName = "TECHNICIAN"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Requester",
-                            NormalizedName = "REQUESTER"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
@@ -157,13 +137,6 @@ namespace SmartITSM.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetUserRoles", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = 1,
-                            RoleId = 1
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
@@ -274,28 +247,6 @@ namespace SmartITSM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AssetTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Laptop"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Desktop"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "Printer"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "Server"
-                        });
                 });
 
             modelBuilder.Entity("SmartITSM.Core.Entities.AuditLog", b =>
@@ -353,29 +304,6 @@ namespace SmartITSM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            DefaultPriority = "Medium",
-                            Name = "Hardware",
-                            RequiresApproval = true
-                        },
-                        new
-                        {
-                            Id = 2,
-                            DefaultPriority = "Low",
-                            Name = "Software",
-                            RequiresApproval = false
-                        },
-                        new
-                        {
-                            Id = 3,
-                            DefaultPriority = "High",
-                            Name = "Network",
-                            RequiresApproval = false
-                        });
                 });
 
             modelBuilder.Entity("SmartITSM.Core.Entities.Department", b =>
@@ -399,14 +327,6 @@ namespace SmartITSM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Departments");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            LocationCode = "HQ-L1",
-                            Name = "IT Support"
-                        });
                 });
 
             modelBuilder.Entity("SmartITSM.Core.Entities.Notification", b =>
@@ -421,6 +341,9 @@ namespace SmartITSM.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSeen")
                         .HasColumnType("bit");
 
                     b.Property<string>("Message")
@@ -460,36 +383,6 @@ namespace SmartITSM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SlaPolicies");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            MaxResolveHours = 48,
-                            MaxResponseHours = 24,
-                            PriorityLevel = 0
-                        },
-                        new
-                        {
-                            Id = 2,
-                            MaxResolveHours = 24,
-                            MaxResponseHours = 8,
-                            PriorityLevel = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            MaxResolveHours = 8,
-                            MaxResponseHours = 4,
-                            PriorityLevel = 2
-                        },
-                        new
-                        {
-                            Id = 4,
-                            MaxResolveHours = 4,
-                            MaxResponseHours = 1,
-                            PriorityLevel = 3
-                        });
                 });
 
             modelBuilder.Entity("SmartITSM.Core.Entities.Ticket", b =>
@@ -600,38 +493,6 @@ namespace SmartITSM.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TicketStatuses");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Name = "Open"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Name = "Pending"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Name = "In Progress"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Name = "Resolved"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Name = "Closed"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Name = "Pending Approval"
-                        });
                 });
 
             modelBuilder.Entity("SmartITSM.Core.Entities.User", b =>
@@ -713,27 +574,6 @@ namespace SmartITSM.Infrastructure.Migrations
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
                     b.ToTable("Users", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "b5ba62b6-e753-4375-9f05-64e88193ac9d",
-                            DepartmentId = 1,
-                            Email = "admin@mail.com",
-                            EmailConfirmed = true,
-                            FullName = "System Admin",
-                            IsActive = true,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ADMIN@MAIL.COM",
-                            NormalizedUserName = "ADMIN@MAIL.COM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEApyaB9rRvtlGT2PoWMGdq/nFVsFzAInBMifDayA83OR1jzPI98dzOcChIu5Fy81Sw==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "4da4c1e7-20f3-4dce-b857-b32c42f89fb5",
-                            TwoFactorEnabled = false,
-                            UserName = "admin@mail.com"
-                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
