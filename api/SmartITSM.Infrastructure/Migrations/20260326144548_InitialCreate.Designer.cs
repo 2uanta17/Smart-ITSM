@@ -12,7 +12,7 @@ using SmartITSM.Infrastructure.Data;
 namespace SmartITSM.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260323141718_InitialCreate")]
+    [Migration("20260326144548_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
