@@ -98,4 +98,18 @@ public class AuthService
         
         return result.Succeeded;
     }
+
+    public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto dto)
+    {
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+
+        if (user == null)
+        {
+            return false;
+        }
+
+        var result = await _userManager.ChangePasswordAsync(user, dto.OldPassword, dto.NewPassword);
+
+        return result.Succeeded;
+    }
 }

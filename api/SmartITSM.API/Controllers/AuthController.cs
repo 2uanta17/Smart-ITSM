@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SmartITSM.Application.DTOs;
 using SmartITSM.Application.Services;
 
@@ -49,5 +51,26 @@ public class AuthController : ControllerBase
         }
         
         return Ok(new { message = "Password has been reset successfully." });
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+
+        if (!int.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "User not authenticated." });
+        }
+
+        var result = await _authService.ChangePasswordAsync(userId, request);
+
+        if (!result)
+        {
+            return BadRequest(new { message = "Old password is incorrect or new password is invalid." });
+        }
+
+        return Ok(new { message = "Password changed successfully." });
     }
 }

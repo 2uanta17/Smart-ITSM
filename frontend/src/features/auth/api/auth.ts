@@ -56,7 +56,27 @@ export const resetPassword = async (
   }
 };
 
-// TODO: Register Function
+export const changePassword = async (
+  oldPassword: string,
+  newPassword: string,
+): Promise<{ message: string }> => {
+  try {
+    const response = await api.post<{ message: string }>(
+      "/auth/change-password",
+      {
+        oldPassword,
+        newPassword,
+      },
+    );
+    return response.data;
+  } catch (error) {
+    if (isAxiosError(error) && error.response?.data) {
+      throw error.response.data;
+    }
+    throw new Error("An unexpected error occurred.");
+  }
+};
+
 export const registerUser = async (data: unknown) => {
   const response = await api.post("/auth/register", data);
   return response.data;

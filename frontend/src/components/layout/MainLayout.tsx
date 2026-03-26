@@ -1,3 +1,4 @@
+import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm/ChangePasswordForm";
 import { getDashboardStats } from "@/features/dashboard/api/dashboardApi";
 import { useNotifications } from "@/features/notifications/hooks/useNotifications";
 import { formatLocalClockTime, getTicketStatusColor } from "@/lib/utils";
@@ -11,6 +12,8 @@ import {
   Divider,
   Group,
   Indicator,
+  Menu,
+  Modal,
   NavLink,
   Popover,
   ScrollArea,
@@ -54,6 +57,10 @@ const navData: NavItem[] = [
 export function MainLayout() {
   const openStatusColor = getTicketStatusColor("Open");
   const [opened, { toggle }] = useDisclosure();
+  const [
+    changePasswordOpened,
+    { open: openChangePassword, close: closeChangePassword },
+  ] = useDisclosure(false);
   const [popoverOpened, setPopoverOpened] = useState(false);
   const { logout, user } = useAuthStore();
   const location = useLocation();
@@ -250,9 +257,19 @@ export function MainLayout() {
               </Popover.Dropdown>
             </Popover>
 
-            <Text size="sm" visibleFrom="sm">
-              {user?.email}
-            </Text>
+            <Menu shadow="md" width={220} position="bottom-end">
+              <Menu.Target>
+                <UnstyledButton>
+                  <Text size="sm">{user?.email ?? "Account"}</Text>
+                </UnstyledButton>
+              </Menu.Target>
+
+              <Menu.Dropdown>
+                <Menu.Item onClick={openChangePassword}>
+                  Change Password
+                </Menu.Item>
+              </Menu.Dropdown>
+            </Menu>
             <Button size="sm" variant="outline" onClick={logout}>
               Logout
             </Button>
@@ -265,6 +282,17 @@ export function MainLayout() {
       <AppShell.Main bg="gray.0">
         <Outlet />
       </AppShell.Main>
+
+      <Modal
+        opened={changePasswordOpened}
+        onClose={closeChangePassword}
+        title="Change Password"
+      >
+        <ChangePasswordForm
+          onCancel={closeChangePassword}
+          onSuccess={closeChangePassword}
+        />
+      </Modal>
     </AppShell>
   );
 }
