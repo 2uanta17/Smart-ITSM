@@ -100,6 +100,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 builder.Services.AddScoped<ITicketRepository, TicketRepository>();
 builder.Services.AddScoped<ITicketService, TicketService>();
+builder.Services.AddScoped<ISlaEscalationService, SlaEscalationService>();
 
 builder.Services.AddScoped<ISlaPolicyRepository, SlaPolicyRepository>();
 builder.Services.AddScoped<IApprovalRequestRepository, ApprovalRequestRepository>();
@@ -161,12 +162,11 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICommentRealtimeService, CommentRealtimeService>();
 builder.Services.AddScoped<ITicketRealtimeService, TicketRealtimeService>();
 builder.Services.AddSignalR();
+builder.Services.AddHostedService<SlaBreachMonitorService>();
 
 WebApplication app = builder.Build();
 
 var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Microsoft.AspNetCore.Identity.IdentityUser>();
-var myHash = hasher.HashPassword(null, "Pass@123");
-Console.WriteLine($"\n\nMY HASH: {myHash}\n\n");
 
 string uploadsPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
 if (!Directory.Exists(uploadsPath))
