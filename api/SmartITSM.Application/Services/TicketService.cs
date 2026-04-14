@@ -4,6 +4,7 @@ using SmartITSM.Core.Constants;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
 using SmartITSM.Core.Interfaces;
+using Microsoft.Extensions.Configuration;
 
 namespace SmartITSM.Application.Services;
 
@@ -19,6 +20,7 @@ public class TicketService : ITicketService
     private readonly ISlaEscalationService _slaEscalationService;
     private readonly ICommentRealtimeService _commentRealtimeService;
     private readonly ITicketRealtimeService _ticketRealtimeService;
+    private readonly IConfiguration _configuration;
 
     public TicketService(
         ITicketRepository repository,
@@ -30,7 +32,8 @@ public class TicketService : ITicketService
         INotificationService notificationService,
         ISlaEscalationService slaEscalationService,
         ICommentRealtimeService commentRealtimeService,
-        ITicketRealtimeService ticketRealtimeService)
+        ITicketRealtimeService ticketRealtimeService,
+        IConfiguration configuration)
     {
         _repository = repository;
         _slaPolicyRepo = slaPolicyRepo;
@@ -42,11 +45,13 @@ public class TicketService : ITicketService
         _slaEscalationService = slaEscalationService;
         _commentRealtimeService = commentRealtimeService;
         _ticketRealtimeService = ticketRealtimeService;
+        _configuration = configuration;
     }
 
     public async Task<TicketDto> CreateAsync(CreateTicketDto dto, int requesterId)
     {
         string? attachmentFileName = null;
+        string frontendBaseUrl = (_configuration["FrontendSettings:BaseUrl"] ?? FrontendDefaults.LocalBaseUrl).TrimEnd('/');
 
         if (dto.Attachment != null && dto.Attachment.Length > 0)
         {
@@ -101,7 +106,7 @@ public class TicketService : ITicketService
                 string subject = $"Ticket #{created.Id} Created: {created.Title}";
                 string body = $@"<p>Your ticket has been successfully created.</p>
                               <p><strong>Description:</strong> {created.Description}</p>
-                              <p>View it here: <a href='http://localhost:5173/tickets/{created.Id}'>http://localhost:5173/tickets/{created.Id}</a></p>";
+                              <p>View it here: <a href='{frontendBaseUrl}/tickets/{created.Id}'>{frontendBaseUrl}/tickets/{created.Id}</a></p>";
 
                 await _emailService.SendEmailAsync(fullTicket.Requester.Email, subject, body);
                 await _notificationService.SendNotificationAsync(requesterId,
@@ -227,6 +232,8 @@ public class TicketService : ITicketService
             return false;
         }
 
+        string frontendBaseUrl = (_configuration["FrontendSettings:BaseUrl"] ?? FrontendDefaults.LocalBaseUrl).TrimEnd('/');
+
         if (ticket.StatusId != TicketStatusIds.Open || ticket.AssignedTechId.HasValue)
         {
             return false;
@@ -254,7 +261,7 @@ public class TicketService : ITicketService
                 string subject = $"Ticket #{ticket.Id} Assigned to {technicianName}";
                 string body = $@"<p>Your ticket has been picked up by <strong>{technicianName}</strong>.</p>
 <p><strong>Ticket:</strong> {ticket.Title}</p>
-<p>You can track progress here: <a href='http://localhost:5173/tickets/{ticket.Id}'>http://localhost:5173/tickets/{ticket.Id}</a></p>";
+<p>You can track progress here: <a href='{frontendBaseUrl}/tickets/{ticket.Id}'>{frontendBaseUrl}/tickets/{ticket.Id}</a></p>";
 
                 await _emailService.SendEmailAsync(ticket.Requester.Email, subject, body);
             }

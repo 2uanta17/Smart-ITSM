@@ -1,6 +1,7 @@
 import { ChangePasswordForm } from "@/features/auth/components/ChangePasswordForm/ChangePasswordForm";
 import { getDashboardStats } from "@/features/dashboard/api/dashboardApi";
 import { useNotifications } from "@/features/notifications/hooks/useNotifications";
+import { TICKET_STATUS } from "@/features/tickets/constants";
 import { formatLocalClockTime, getTicketStatusColor } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -55,7 +56,7 @@ const navData: NavItem[] = [
 ];
 
 export function MainLayout() {
-  const openStatusColor = getTicketStatusColor("Open");
+  const openStatusColor = getTicketStatusColor(TICKET_STATUS.OPEN);
   const [opened, { toggle }] = useDisclosure();
   const [
     changePasswordOpened,

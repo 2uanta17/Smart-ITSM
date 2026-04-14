@@ -2,6 +2,7 @@ import {
   getDashboardRecent,
   getDashboardStats,
 } from "@/features/dashboard/api/dashboardApi";
+import { TICKET_STATUS } from "@/features/tickets/constants";
 import { formatLocalTime, getTicketStatusColor } from "@/lib/utils";
 import {
   Card,
@@ -15,8 +16,8 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 export const RequesterDashboard = () => {
-  const openStatusColor = getTicketStatusColor("Open");
-  const inProgressStatusColor = getTicketStatusColor("In Progress");
+  const openStatusColor = getTicketStatusColor(TICKET_STATUS.OPEN);
+  const inProgressStatusColor = getTicketStatusColor(TICKET_STATUS.IN_PROGRESS);
 
   const {
     data: stats,

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using SmartITSM.Application.DTOs;
+using SmartITSM.Core.Constants;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Interfaces;
 using System.Web;
@@ -61,7 +62,7 @@ public class AuthService
             return true;
         }
 
-        var frontendBaseUrl = _configuration["FrontendSettings:BaseUrl"] ?? "http://localhost:5173";
+        var frontendBaseUrl = _configuration["FrontendSettings:BaseUrl"] ?? FrontendDefaults.LocalBaseUrl;
         frontendBaseUrl = frontendBaseUrl.TrimEnd('/');
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);

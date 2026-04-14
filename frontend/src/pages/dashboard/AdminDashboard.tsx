@@ -4,6 +4,7 @@ import {
   getDashboardRecent,
   getDashboardStats,
 } from "@/features/dashboard/api/dashboardApi";
+import { TICKET_STATUS } from "@/features/tickets/constants";
 import {
   formatLocalDate,
   formatLocalTime,
@@ -44,9 +45,9 @@ export const AdminDashboard = () => {
   const [datePreset, setDatePreset] = useState<DatePreset>("all-time");
   const [startDateInput, setStartDateInput] = useState("");
   const [endDateInput, setEndDateInput] = useState("");
-  const openStatusColor = getTicketStatusColor("Open");
-  const inProgressStatusColor = getTicketStatusColor("In Progress");
-  const resolvedStatusColor = getTicketStatusColor("Resolved");
+  const openStatusColor = getTicketStatusColor(TICKET_STATUS.OPEN);
+  const inProgressStatusColor = getTicketStatusColor(TICKET_STATUS.IN_PROGRESS);
+  const resolvedStatusColor = getTicketStatusColor(TICKET_STATUS.RESOLVED);
 
   const dashboardRange = useMemo(() => {
     const toStartOfDayIso = (date: Date) => {

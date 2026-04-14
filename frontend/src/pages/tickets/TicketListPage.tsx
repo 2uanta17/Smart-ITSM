@@ -3,6 +3,7 @@ import {
   getMyTickets,
   getTickets,
 } from "@/features/tickets/api/ticketApi";
+import { TICKET_STATUS } from "@/features/tickets/constants";
 import type { Ticket } from "@/features/tickets/types/ticketTypes";
 import api from "@/lib/axios";
 import { formatLocalDate, getTicketStatusColor } from "@/lib/utils";
@@ -50,8 +51,8 @@ export const TicketListPage = () => {
     Boolean(
       ticket.dueDate &&
       new Date(ticket.dueDate) <= new Date() &&
-      ticket.status !== "Resolved" &&
-      ticket.status !== "Cancelled",
+      ticket.status !== TICKET_STATUS.RESOLVED &&
+      ticket.status !== TICKET_STATUS.CANCELLED,
     );
 
   const { data: tickets = [], isLoading } = useQuery({

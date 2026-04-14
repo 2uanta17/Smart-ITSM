@@ -7,6 +7,7 @@ import {
   resolveTicket,
   takeTicket,
 } from "@/features/tickets/api/ticketApi";
+import { TICKET_STATUS } from "@/features/tickets/constants";
 import { useTicketCommentsSignalR } from "@/features/tickets/hooks/useTicketCommentsSignalR";
 import type { Ticket } from "@/features/tickets/types/ticketTypes";
 import {
@@ -127,7 +128,7 @@ export const TicketDetailPage = () => {
       const previousTickets = queryClient.getQueryData<Ticket[]>(["tickets"]);
 
       updateTicketCaches({
-        status: "In Progress",
+        status: TICKET_STATUS.IN_PROGRESS,
         assignedTechId: Number(user?.id),
         assignedTechName: "You",
       });
@@ -158,7 +159,7 @@ export const TicketDetailPage = () => {
       ]);
       const previousTickets = queryClient.getQueryData<Ticket[]>(["tickets"]);
 
-      updateTicketCaches({ status: "Resolved" });
+      updateTicketCaches({ status: TICKET_STATUS.RESOLVED });
       return { previousTicket, previousTickets };
     },
     onSuccess: () => handleSuccess("Ticket has been resolved."),
@@ -185,7 +186,7 @@ export const TicketDetailPage = () => {
       ]);
       const previousTickets = queryClient.getQueryData<Ticket[]>(["tickets"]);
 
-      updateTicketCaches({ status: "Cancelled" });
+      updateTicketCaches({ status: TICKET_STATUS.CANCELLED });
       return { previousTicket, previousTickets };
     },
     onSuccess: () => handleSuccess("Ticket has been cancelled."),
@@ -245,7 +246,7 @@ export const TicketDetailPage = () => {
           </Group>
 
           <Group>
-            {isStaff && ticket.status === "Open" && (
+            {isStaff && ticket.status === TICKET_STATUS.OPEN && (
               <Button
                 color="green"
                 onClick={() => takeMutation.mutate()}
@@ -255,17 +256,19 @@ export const TicketDetailPage = () => {
               </Button>
             )}
 
-            {isStaff && ticket.status === "In Progress" && isAssignedToMe && (
-              <Button
-                color="blue"
-                onClick={() => resolveMutation.mutate()}
-                loading={resolveMutation.isPending}
-              >
-                Resolve
-              </Button>
-            )}
+            {isStaff &&
+              ticket.status === TICKET_STATUS.IN_PROGRESS &&
+              isAssignedToMe && (
+                <Button
+                  color="blue"
+                  onClick={() => resolveMutation.mutate()}
+                  loading={resolveMutation.isPending}
+                >
+                  Resolve
+                </Button>
+              )}
 
-            {!isStaff && ticket.status === "Open" && (
+            {!isStaff && ticket.status === TICKET_STATUS.OPEN && (
               <Button
                 color="red"
                 variant="outline"

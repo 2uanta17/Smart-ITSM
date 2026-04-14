@@ -1,3 +1,4 @@
+import { TICKET_STATUS } from "@/features/tickets/constants";
 import { isAxiosError } from "axios";
 
 const HAS_TIMEZONE_SUFFIX = /(Z|[+-]\d{2}:\d{2})$/i;
@@ -40,19 +41,19 @@ export const getPriorityColor = (priority: string) => {
 
 export const getTicketStatusColor = (status: string) => {
   switch (status) {
-    case "Open":
+    case TICKET_STATUS.OPEN:
       return "green";
-    case "Pending":
+    case TICKET_STATUS.PENDING:
       return "orange";
-    case "Pending Approval":
+    case TICKET_STATUS.PENDING_APPROVAL:
       return "violet";
-    case "In Progress":
+    case TICKET_STATUS.IN_PROGRESS:
       return "yellow";
-    case "Resolved":
+    case TICKET_STATUS.RESOLVED:
       return "blue";
-    case "Cancelled":
+    case TICKET_STATUS.CANCELLED:
       return "red";
-    case "Closed":
+    case TICKET_STATUS.CLOSED:
       return "gray";
     default:
       return "dark";

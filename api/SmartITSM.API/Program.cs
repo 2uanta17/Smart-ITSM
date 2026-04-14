@@ -23,6 +23,7 @@ using SmartITSM.Infrastructure.Data;
 using SmartITSM.Infrastructure.Identity;
 using SmartITSM.Infrastructure.Repositories;
 using SmartITSM.Infrastructure.Services;
+using SmartITSM.Core.Constants;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -165,6 +166,7 @@ builder.Services.AddSignalR();
 builder.Services.AddHostedService<SlaBreachMonitorService>();
 
 WebApplication app = builder.Build();
+string frontendBaseUrl = (builder.Configuration["FrontendSettings:BaseUrl"] ?? FrontendDefaults.LocalBaseUrl).TrimEnd('/');
 
 var hasher = new Microsoft.AspNetCore.Identity.PasswordHasher<Microsoft.AspNetCore.Identity.IdentityUser>();
 
@@ -185,7 +187,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors(x => x
-    .WithOrigins("http://localhost:5173")
+    .WithOrigins(frontendBaseUrl)
     .AllowAnyHeader()
     .AllowAnyMethod()
     .AllowCredentials()
