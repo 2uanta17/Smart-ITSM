@@ -1,5 +1,6 @@
 ﻿using SmartITSM.Application.DTOs;
 using SmartITSM.Application.Interfaces;
+using SmartITSM.Core.Constants;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
 using SmartITSM.Core.Interfaces;
@@ -40,6 +41,11 @@ public class ApprovalService : IApprovalService
             return false;
         }
 
+        if (!isApproved && string.IsNullOrWhiteSpace(reason))
+        {
+            return false;
+        }
+
         approval.Status = isApproved ? ApprovalStatus.Approved : ApprovalStatus.Rejected;
         approval.Reason = reason;
         approval.ResolvedAt = DateTime.UtcNow;
@@ -51,7 +57,7 @@ public class ApprovalService : IApprovalService
         {
             // If approved, status = Open
             // If rejected, status = Closed
-            ticket.StatusId = isApproved ? 1 : 5;
+            ticket.StatusId = isApproved ? TicketStatusIds.Open : TicketStatusIds.Cancelled;
             await _ticketRepo.UpdateAsync(ticket);
 
             await _ticketRepo.AddAuditLogAsync(new AuditLog

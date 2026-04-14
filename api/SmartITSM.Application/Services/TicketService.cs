@@ -227,6 +227,11 @@ public class TicketService : ITicketService
             return false;
         }
 
+        if (ticket.StatusId != TicketStatusIds.Open || ticket.AssignedTechId.HasValue)
+        {
+            return false;
+        }
+
         ticket.AssignedTechId = technicianId;
         ticket.StatusId = TicketStatusIds.InProgress;
 
@@ -326,6 +331,11 @@ public class TicketService : ITicketService
     {
         Ticket? ticket = await _repository.GetByIdAsync(ticketId);
         if (ticket == null || ticket.RequesterId != requesterId)
+        {
+            return false;
+        }
+
+        if (ticket.StatusId != TicketStatusIds.Open)
         {
             return false;
         }
