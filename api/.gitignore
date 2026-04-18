@@ -488,3 +488,4 @@ $RECYCLE.BIN/
 **/**/launchSettings.json
 
 wwwroot
+seed-smartitsm-demo-data.sql
