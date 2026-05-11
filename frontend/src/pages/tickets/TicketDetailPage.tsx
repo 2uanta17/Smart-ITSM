@@ -14,6 +14,7 @@ import {
   formatLocalClockTime,
   formatLocalTime,
   getErrorMessage,
+  getPriorityColor,
   getTicketStatusColor,
 } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
@@ -242,6 +243,9 @@ export const TicketDetailPage = () => {
             </Title>
             <Badge size="lg" color={getTicketStatusColor(ticket.status)}>
               {ticket.status}
+            </Badge>
+            <Badge size="lg" color={getPriorityColor(ticket.priority)}>
+              {ticket.priority}
             </Badge>
           </Group>
 

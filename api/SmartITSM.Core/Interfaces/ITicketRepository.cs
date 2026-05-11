@@ -32,4 +32,5 @@ public interface ITicketRepository
 
     Task<int> GetUnassignedTicketsCountAsync(DateTime? startDate = null, DateTime? endDate = null);
     Task<IEnumerable<Ticket>> GetUnassignedTicketsAsync(int count, DateTime? startDate = null, DateTime? endDate = null);
+    Task<IEnumerable<Ticket>> GetResolvedTicketsAsync(DateTime? startDate = null, DateTime? endDate = null);
 }

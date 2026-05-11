@@ -177,6 +177,18 @@ public class TicketRepository : ITicketRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<Ticket>> GetResolvedTicketsAsync(DateTime? startDate = null, DateTime? endDate = null)
+    {
+        var query = _context.Tickets
+            .Include(t => t.AssignedTech)
+            .Where(t => t.ResolvedAt.HasValue)
+            .AsQueryable();
+
+        query = ApplyDashboardWindow(query, startDate, endDate);
+
+        return await query.ToListAsync();
+    }
+
     private IQueryable<Ticket> ApplyDashboardWindow(
         IQueryable<Ticket> query,
         DateTime? startDate,

@@ -4,6 +4,16 @@ export interface DashboardSummary {
   inProgressTickets: number;
   resolvedTickets: number;
   unassignedTickets: number;
+  totalSlaMet: number;
+  totalSlaBreached: number;
+  technicianPerformance: TechnicianPerformance[];
+}
+
+export interface TechnicianPerformance {
+  technicianName: string;
+  slaMet: number;
+  slaBreached: number;
+  complianceRate: number;
 }
 
 export interface CategoryDistribution {

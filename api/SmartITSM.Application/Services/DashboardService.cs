@@ -39,7 +39,44 @@ public class DashboardService : IDashboardService
             ? await _ticketRepository.GetUnassignedTicketsCountAsync(normalizedStartDate, normalizedEndDate)
             : 0;
 
-        return new DashboardSummaryDto(total, open, inProgress, resolved, unassigned);
+        // SLA Compliance stats (only for Admin/Technician)
+        var slaMet = 0;
+        var slaBreached = 0;
+        List<TechnicianPerformanceDto>? techPerformance = null;
+
+        if (role == AppRoles.Admin || role == AppRoles.Technician)
+        {
+            var resolvedTickets = await _ticketRepository.GetResolvedTicketsAsync(normalizedStartDate, normalizedEndDate);
+            slaMet = resolvedTickets.Count(t => t.ResolvedAt <= t.DueDate);
+            slaBreached = resolvedTickets.Count(t => t.ResolvedAt > t.DueDate);
+
+            techPerformance = resolvedTickets
+                .GroupBy(t => t.AssignedTech?.FullName ?? "Unassigned")
+                .Select(g =>
+                {
+                    var met = g.Count(t => t.ResolvedAt <= t.DueDate);
+                    var breached = g.Count(t => t.ResolvedAt > t.DueDate);
+                    var total = met + breached;
+                    return new TechnicianPerformanceDto(
+                        g.Key,
+                        met,
+                        breached,
+                        total > 0 ? Math.Round((double)met / total * 100, 2) : 0
+                    );
+                })
+                .OrderByDescending(p => p.ComplianceRate)
+                .ToList();
+        }
+
+        return new DashboardSummaryDto(
+            total,
+            open,
+            inProgress,
+            resolved,
+            unassigned,
+            slaMet,
+            slaBreached,
+            techPerformance);
     }
 
     public async Task<IEnumerable<CategoryDistributionDto>> GetCategoryDistributionAsync(

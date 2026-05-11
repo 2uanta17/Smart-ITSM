@@ -55,6 +55,28 @@ export const TicketListPage = () => {
       ticket.status !== TICKET_STATUS.CANCELLED,
     );
 
+  const isTicketApproachingBreach = (ticket: Ticket) => {
+    if (
+      !ticket.dueDate ||
+      ticket.status === TICKET_STATUS.RESOLVED ||
+      ticket.status === TICKET_STATUS.CANCELLED
+    ) {
+      return false;
+    }
+    const dueDate = new Date(ticket.dueDate).getTime();
+    const now = new Date().getTime();
+    const msToBreach = dueDate - now;
+    const hoursToBreach = msToBreach / (1000 * 60 * 60);
+    // Approaching if within 2 hours and not already overdue
+    return hoursToBreach > 0 && hoursToBreach <= 2;
+  };
+
+  const getRowBackgroundColor = (t: Ticket) => {
+    if (isTicketOverdue(t)) return "var(--mantine-color-red-0)";
+    if (isTicketApproachingBreach(t)) return "var(--mantine-color-yellow-0)";
+    return undefined;
+  };
+
   const { data: tickets = [], isLoading } = useQuery({
     queryKey: ["tickets"],
     queryFn: isStaff ? getTickets : getMyTickets,
@@ -182,9 +204,7 @@ export const TicketListPage = () => {
       key={t.id}
       style={{
         cursor: "pointer",
-        backgroundColor: isTicketOverdue(t)
-          ? "var(--mantine-color-red-0)"
-          : undefined,
+        backgroundColor: getRowBackgroundColor(t),
       }}
       onClick={() => navigate(`/app/tickets/${t.id}`)}
     >
@@ -192,11 +212,18 @@ export const TicketListPage = () => {
       <Table.Td>{t.title}</Table.Td>
       <Table.Td>{t.categoryName}</Table.Td>
       <Table.Td>
-        <Group gap="xs">
-          <Badge color={getTicketStatusColor(t.status)}>{t.status}</Badge>
+        <Group gap={4} wrap="nowrap">
+          <Badge color={getTicketStatusColor(t.status)} size="sm">
+            {t.status}
+          </Badge>
           {isTicketOverdue(t) && (
-            <Badge color="red" variant="light" size="sm">
+            <Badge color="red" variant="light" size="xs">
               Overdue
+            </Badge>
+          )}
+          {isTicketApproachingBreach(t) && (
+            <Badge color="yellow" variant="light" size="xs">
+              SLA
             </Badge>
           )}
         </Group>

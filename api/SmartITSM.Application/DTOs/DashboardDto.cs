@@ -5,7 +5,17 @@ public record DashboardSummaryDto(
     int OpenTickets,
     int InProgressTickets,
     int ResolvedTickets,
-    int UnassignedTickets
+    int UnassignedTickets,
+    int TotalSlaMet = 0,
+    int TotalSlaBreached = 0,
+    IEnumerable<TechnicianPerformanceDto>? TechnicianPerformance = null
+);
+
+public record TechnicianPerformanceDto(
+    string TechnicianName,
+    int SlaMet,
+    int SlaBreached,
+    double ComplianceRate
 );
 
 public record CategoryDistributionDto(
