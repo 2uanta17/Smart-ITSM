@@ -1,12 +1,12 @@
 # Smart ITSM
 
-An enterprise-grade IT Service Management (ITSM) platform built with .NET 8 and React 19. This project demonstrates structured clean architecture, real-time data synchronization, and AI-driven automation for modern IT operations.
+An enterprise-grade IT Service Management (ITSM) platform built with .NET 9 and React 19. This project demonstrates structured clean architecture, real-time data synchronization, and AI-driven automation for modern IT operations.
 
 ## Technical Stack
 
 | Layer         | Technologies                                              |
 | :------------ | :-------------------------------------------------------- |
-| **Backend**   | .NET 8 Web API, Entity Framework Core, SQL Server         |
+| **Backend**   | .NET 9 Web API, Entity Framework Core, SQL Server         |
 | **Frontend**  | React 19, TypeScript, Mantine UI, Zustand, TanStack Query |
 | **Real-time** | ASP.NET Core SignalR                                      |
 | **AI/ML**     | Google Gemini API (Ticket routing & categorization)       |
@@ -57,7 +57,7 @@ The frontend utilizes a Feature-Based Folder Structure, encapsulating logic, sta
 
 ### Prerequisites
 
-*   **.NET 8 SDK**
+*   **.NET 9 SDK**
 *   **Node.js (v18+)**
 *   **SQL Server**
 
