@@ -4,13 +4,13 @@ An enterprise-grade IT Service Management (ITSM) platform built with .NET 9 and 
 
 ## Technical Stack
 
-| Layer         | Technologies                                              |
-| :------------ | :-------------------------------------------------------- |
-| **Backend**   | C#, .NET 9 Web API, Entity Framework Core, SQL Server     |
+| Layer         | Technologies                                                    |
+| :------------ | :-------------------------------------------------------------- |
+| **Backend**   | C#, .NET 9 Web API, Entity Framework Core, SQL Server           |
 | **Frontend**  | React 19, Vite, TypeScript, Mantine UI, Zustand, TanStack Query |
-| **Real-time** | ASP.NET Core SignalR                                      |
-| **AI/ML**     | Google Gemini API (Ticket routing & categorization)       |
-| **Security**  | JWT Authentication, Role-Based Access Control (RBAC)      |
+| **Real-time** | ASP.NET Core SignalR                                            |
+| **AI/ML**     | Google Gemini API (Ticket routing & categorization)             |
+| **Security**  | JWT Authentication, Role-Based Access Control (RBAC)            |
 
 ## Core Features
 
@@ -50,6 +50,7 @@ The backend implements Clean Architecture to ensure the business logic remains d
 The frontend utilizes a modular folder structure, separating logic, types, and API calls into feature directories (e.g., Tickets, Assets) while maintaining global stores and page-level components for clean separation of concerns.
 
 ## Demo Images
+
 <p align="center">
   <img width="400" alt="Dashboard Overview" src="https://github.com/user-attachments/assets/f60ed6f1-e11b-4598-8e42-03d2f70a8fb7" />
   <br><br>
@@ -62,73 +63,72 @@ The frontend utilizes a modular folder structure, separating logic, types, and A
 
 ### Prerequisites
 
-*   **.NET 9 SDK**
-*   **Node.js (v18+)**
-*   **SQL Server**
-*   **EF Core Global Tools** (`dotnet tool install --global dotnet-ef`)
+- **.NET 9 SDK**
+- **Node.js (v18+)**
+- **SQL Server**
+- **EF Core Global Tools** (`dotnet tool install --global dotnet-ef`)
 
 ### Installation
 
 1.  **Clone the repository**:
+
     ```bash
     git clone https://github.com/your-username/SmartITSM.git
     cd SmartITSM
     ```
 
 2.  **Backend Setup**:
-    *   Navigate to the API folder:
-        ```bash
-        cd api/SmartITSM.API
-        ```
-    *   Update the connection string in `appsettings.json` (or `appsettings.Development.json`):
-        ```json
-        "ConnectionStrings": {
-          "DefaultConnection": "Server=YOUR_SERVER;Database=SmartITSM;Trusted_Connection=True;TrustServerCertificate=True"
-        }
-        ```
-    *   Apply database migrations:
-        ```bash
-        dotnet ef database update --project ../SmartITSM.Infrastructure --startup-project .
-        ```
+    - Navigate to the API folder:
+      ```bash
+      cd api/SmartITSM.API
+      ```
+    - Update the connection string in `appsettings.json` (or `appsettings.Development.json`):
+      ```json
+      "ConnectionStrings": {
+        "DefaultConnection": "Server=YOUR_SERVER;Database=SmartITSM;Trusted_Connection=True;TrustServerCertificate=True"
+      }
+      ```
+    - Apply database migrations:
+      ```bash
+      dotnet ef database update --project ../SmartITSM.Infrastructure --startup-project .
+      ```
 
 > [!NOTE]
 > As the demo seeding script is not included in the public repository, you will need to manually initialize the database with an Admin user or refer to the internal documentation for bootstrapping instructions.
 
 3.  **Configuration**:
-    *   Open `api/SmartITSM.API/appsettings.json` and provide your **Gemini API Key**.
-    *   (Optional) Update `JwtSettings:Key` with a secure random string for production-like testing.
-    *   (Optional) Configure `MailtrapSettings` or `SmtpSettings` to enable email notifications.
+    - Open `api/SmartITSM.API/appsettings.json` and provide your **Gemini API Key**.
+    - (Optional) Update `JwtSettings:Key` with a secure random string for production-like testing.
+    - (Optional) Configure `MailtrapSettings` or `SmtpSettings` to enable email notifications.
 
 4.  **Frontend Setup**:
-    *   Navigate to the frontend folder:
-        ```bash
-        cd ../../frontend
-        ```
-    *   Install dependencies:
-        ```bash
-        npm install
-        ```
-    *   Create a `.env` file in the `frontend` root and add:
-        ```env
-        VITE_API_URL=http://localhost:5096/api
-        ```
+    - Navigate to the frontend folder:
+      ```bash
+      cd ../../frontend
+      ```
+    - Install dependencies:
+      ```bash
+      npm install
+      ```
+    - Create a `.env` file in the `frontend` root and add:
+      ```env
+      VITE_API_URL=http://localhost:5096/api
+      ```
 
 ### Running the Project
 
 1.  **Start the Backend**:
-    *   Open a terminal and navigate to the API folder:
-        ```bash
-        cd api/SmartITSM.API
-        dotnet run
-        ```
-    *   The API documentation (Swagger) will be available at `http://localhost:5096/swagger`.
+    - Open a terminal and navigate to the API folder:
+      ```bash
+      cd api/SmartITSM.API
+      dotnet run
+      ```
+    - The API documentation (Swagger) will be available at `http://localhost:5096/swagger`.
 
 2.  **Start the Frontend**:
-    *   Open a **new** terminal and navigate to the frontend folder:
-        ```bash
-        cd frontend
-        npm run dev
-        ```
-    The app should now be running at [http://localhost:5173](http://localhost:5173).
-
-
+    - Open a **new** terminal and navigate to the frontend folder:
+      `bash
+    cd frontend
+    npm run dev
+    `
+      The app should now be running at [http://localhost:5173](http://localhost:5173).
