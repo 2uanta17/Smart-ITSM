@@ -1,3 +1,4 @@
+import { getCategories } from "@/features/tickets/api/categoryApi";
 import {
   addTicketComment,
   cancelTicket,
@@ -6,8 +7,13 @@ import {
   getTicketHistory,
   resolveTicket,
   takeTicket,
+  updateTicket,
 } from "@/features/tickets/api/ticketApi";
-import { TICKET_STATUS } from "@/features/tickets/constants";
+import {
+  TICKET_PRIORITY,
+  TICKET_PRIORITY_MAP,
+  TICKET_STATUS,
+} from "@/features/tickets/constants";
 import { useTicketCommentsSignalR } from "@/features/tickets/hooks/useTicketCommentsSignalR";
 import type { Ticket } from "@/features/tickets/types/ticketTypes";
 import {
@@ -19,6 +25,7 @@ import {
 } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
+  ActionIcon,
   Avatar,
   Badge,
   Button,
@@ -27,8 +34,10 @@ import {
   Group,
   Image,
   LoadingOverlay,
+  Modal,
   Paper,
   ScrollArea,
+  Select,
   Stack,
   Tabs,
   Text,
@@ -36,7 +45,9 @@ import {
   Timeline,
   Title,
 } from "@mantine/core";
+import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
+import { IconEdit } from "@tabler/icons-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -50,12 +61,21 @@ export const TicketDetailPage = () => {
   const [commentText, setCommentText] = useState("");
   const commentsViewportRef = useRef<HTMLDivElement>(null);
 
+  const [opened, { open, close }] = useDisclosure(false);
+  const [editCategory, setEditCategory] = useState<string>("");
+  const [editPriority, setEditPriority] = useState<string>("");
+
   useTicketCommentsSignalR(ticketId);
 
   const { data: ticket, isLoading: isLoadingTicket } = useQuery({
     queryKey: ["ticket", ticketId],
     queryFn: () => getTicketById(ticketId),
     enabled: !!ticketId,
+  });
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
   });
 
   const { data: comments = [], isLoading: isLoadingComments } = useQuery({
@@ -90,6 +110,8 @@ export const TicketDetailPage = () => {
 
   const updateTicketCaches = (next: {
     status?: string;
+    priority?: string;
+    categoryName?: string;
     assignedTechId?: number;
     assignedTechName?: string;
   }) => {
@@ -211,6 +233,63 @@ export const TicketDetailPage = () => {
     onError: handleError,
   });
 
+  const updateMutation = useMutation({
+    mutationFn: (payload: { priority: number; categoryId: number }) =>
+      updateTicket(ticketId, payload),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ["ticket", ticketId] });
+      await queryClient.cancelQueries({ queryKey: ["tickets"] });
+
+      const previousTicket = queryClient.getQueryData<Ticket>([
+        "ticket",
+        ticketId,
+      ]);
+
+      // Optimistically update
+      const newCategoryName = categories.find(
+        (c) => c.id === variables.categoryId,
+      )?.name;
+
+      const priorityLabel = Object.entries(TICKET_PRIORITY_MAP).find(
+        ([, val]) => val === variables.priority,
+      )?.[0];
+
+      updateTicketCaches({
+        priority: priorityLabel,
+        categoryName: newCategoryName,
+      });
+
+      return { previousTicket };
+    },
+    onSuccess: () => {
+      handleSuccess("Ticket updated successfully.");
+      close();
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previousTicket) {
+        queryClient.setQueryData(["ticket", ticketId], context.previousTicket);
+      }
+      handleError(error);
+    },
+  });
+
+  const handleEditOpen = () => {
+    if (ticket) {
+      const catId = categories.find((c) => c.name === ticket.categoryName)?.id;
+      setEditCategory(catId?.toString() || "");
+      setEditPriority(ticket.priority);
+      open();
+    }
+  };
+
+  const handleSaveUpdate = () => {
+    updateMutation.mutate({
+      priority:
+        TICKET_PRIORITY_MAP[editPriority as keyof typeof TICKET_PRIORITY_MAP],
+      categoryId: Number(editCategory),
+    });
+  };
+
   useEffect(() => {
     if (!commentsViewportRef.current) {
       return;
@@ -235,9 +314,42 @@ export const TicketDetailPage = () => {
         ← Back to List
       </Button>
 
+      <Modal opened={opened} onClose={close} title="Correct Ticket Details">
+        <Stack>
+          <Select
+            label="Category"
+            placeholder="Select category"
+            data={categories.map((c) => ({
+              value: c.id.toString(),
+              label: c.name,
+            }))}
+            value={editCategory}
+            onChange={(val) => setEditCategory(val || "")}
+          />
+          <Select
+            label="Priority"
+            placeholder="Select priority"
+            data={Object.values(TICKET_PRIORITY)}
+            value={editPriority}
+            onChange={(val) => setEditPriority(val || "")}
+          />
+          <Group justify="flex-end" mt="md">
+            <Button variant="outline" onClick={close}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveUpdate}
+              loading={updateMutation.isPending}
+            >
+              Save Changes
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       <Paper p="md" withBorder mb="lg" bg="gray.0">
         <Group justify="space-between">
-          <Group>
+          <Group gap="xs">
             <Title order={3}>
               #{ticket.id} - {ticket.title}
             </Title>
@@ -247,6 +359,17 @@ export const TicketDetailPage = () => {
             <Badge size="lg" color={getPriorityColor(ticket.priority)}>
               {ticket.priority}
             </Badge>
+            {isStaff && (
+              <ActionIcon
+                variant="subtle"
+                radius="xs"
+                color="green"
+                onClick={handleEditOpen}
+                title="Edit Category/Priority"
+              >
+                <IconEdit size={18} />
+              </ActionIcon>
+            )}
           </Group>
 
           <Group>

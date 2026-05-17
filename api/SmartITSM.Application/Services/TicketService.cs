@@ -369,6 +369,63 @@ public class TicketService : ITicketService
         return true;
     }
 
+    public async Task<bool> UpdateTicketAsync(int ticketId, int userId, UpdateTicketDto dto)
+    {
+        Ticket? ticket = await _repository.GetByIdAsync(ticketId);
+        if (ticket == null)
+        {
+            return false;
+        }
+
+        // Logic check: only technicians or admins can update these fields (enforced by controller role check)
+        // Log the changes
+        var changes = new List<string>();
+        if (ticket.Priority != dto.Priority)
+        {
+            changes.Add($"Priority changed from {ticket.Priority} to {dto.Priority}");
+            ticket.Priority = dto.Priority;
+
+            // Update DueDate based on new priority SLA
+            SlaPolicy? slaPolicy = await _slaPolicyRepo.GetByPriorityAsync(dto.Priority);
+            if (slaPolicy != null)
+            {
+                ticket.DueDate = ticket.CreatedAt.AddHours(slaPolicy.MaxResolveHours);
+            }
+        }
+
+        if (ticket.CategoryId != dto.CategoryId)
+        {
+            Category? oldCategory = await _categoryRepo.GetByIdAsync(ticket.CategoryId);
+            Category? newCategory = await _categoryRepo.GetByIdAsync(dto.CategoryId);
+            changes.Add($"Category changed from {oldCategory?.Name ?? "Unknown"} to {newCategory?.Name ?? "Unknown"}");
+            ticket.CategoryId = dto.CategoryId;
+        }
+
+        if (changes.Count == 0) return true;
+
+        await _repository.UpdateAsync(ticket);
+        await _repository.AddAuditLogAsync(new AuditLog
+        {
+            TicketId = ticketId,
+            UserId = userId,
+            Action = string.Join(", ", changes),
+            Timestamp = DateTime.UtcNow
+        });
+
+        // Get full ticket for realtime update (including category/status names)
+        Ticket? updatedTicket = await _repository.GetByIdAsync(ticketId);
+
+        await _ticketRealtimeService.BroadcastTicketUpdatedAsync(new TicketRealtimeUpdateDto(
+            ticket.Id,
+            updatedTicket?.Status?.Name ?? "Unknown",
+            ticket.AssignedTechId,
+            updatedTicket?.AssignedTech?.FullName,
+            DateTime.UtcNow
+        ));
+
+        return true;
+    }
+
     public async Task<IEnumerable<AuditLogDto>> GetHistoryAsync(int ticketId)
     {
         IEnumerable<AuditLog> logs = await _repository.GetAuditLogsAsync(ticketId);

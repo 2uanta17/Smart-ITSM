@@ -53,6 +53,13 @@ export const cancelTicket = async (id: number) => {
   await api.patch(`/tickets/${id}/cancel`);
 };
 
+export const updateTicket = async (
+  id: number,
+  payload: { priority: number; categoryId: number },
+) => {
+  await api.put(`/tickets/${id}`, payload);
+};
+
 export const getTicketComments = async (id: number) => {
   const { data } = await api.get<TicketComment[]>(`/tickets/${id}/comments`);
   return data;

@@ -115,6 +115,19 @@ public class TicketsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPut("{id}")]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.Technician}")]
+    public async Task<IActionResult> UpdateTicket(int id, [FromBody] UpdateTicketDto dto)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+
+        var success = await _service.UpdateTicketAsync(id, int.Parse(userIdClaim), dto);
+        if (!success) return NotFound("Ticket not found.");
+
+        return NoContent();
+    }
+
     [HttpGet("{id}/history")]
     public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetHistory(int id)
     {

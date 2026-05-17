@@ -1,8 +1,9 @@
+import { getCategories } from "@/features/tickets/api/categoryApi";
 import {
   createTicket,
   predictTicketRouting,
 } from "@/features/tickets/api/ticketApi";
-import api from "@/lib/axios";
+import { TICKET_PRIORITY_OPTIONS } from "@/features/tickets/constants";
 import { getErrorMessage } from "@/lib/utils";
 import {
   Button,
@@ -22,23 +23,12 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 
-interface Category {
-  id: number;
-  name: string;
-  defaultPriority: string;
-}
-
 interface CreateTicketFormValues {
   title: string;
   description: string;
   priority: string;
   categoryId: string;
 }
-
-const getCategories = async () => {
-  const { data } = await api.get<Category[]>("/categories");
-  return data;
-};
 
 export const CreateTicketPage = () => {
   const navigate = useNavigate();
@@ -135,13 +125,6 @@ export const CreateTicketPage = () => {
     }
   };
 
-  const priorityOptions = [
-    { value: "0", label: "Low" },
-    { value: "1", label: "Medium" },
-    { value: "2", label: "High" },
-    { value: "3", label: "Critical" },
-  ];
-
   const categoryOptions = categories.map((c) => ({
     value: c.id.toString(),
     label: c.name,
@@ -201,7 +184,7 @@ export const CreateTicketPage = () => {
               <Select
                 label="Priority"
                 placeholder="Select priority"
-                data={priorityOptions}
+                data={TICKET_PRIORITY_OPTIONS}
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.priority?.message as string}

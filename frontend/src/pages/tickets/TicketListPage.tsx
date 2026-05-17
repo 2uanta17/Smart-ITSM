@@ -1,3 +1,4 @@
+import { getCategories } from "@/features/tickets/api/categoryApi";
 import {
   exportTicketsCsv,
   getMyTickets,
@@ -5,7 +6,6 @@ import {
 } from "@/features/tickets/api/ticketApi";
 import { TICKET_STATUS } from "@/features/tickets/constants";
 import type { Ticket } from "@/features/tickets/types/ticketTypes";
-import api from "@/lib/axios";
 import { formatLocalDate, getTicketStatusColor } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
@@ -25,17 +25,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-interface Category {
-  id: number;
-  name: string;
-}
-
 type TicketSortOption = "newest" | "oldest" | "overdue";
-
-const getCategories = async () => {
-  const { data } = await api.get<Category[]>("/categories");
-  return data;
-};
 
 export const TicketListPage = () => {
   const { user } = useAuthStore();

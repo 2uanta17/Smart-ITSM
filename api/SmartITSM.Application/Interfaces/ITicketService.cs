@@ -13,5 +13,6 @@ public interface ITicketService
     Task<bool> TakeTicketAsync(int ticketId, int technicianId);
     Task<bool> ResolveTicketAsync(int ticketId, int technicianId);
     Task<bool> CancelTicketAsync(int ticketId, int requesterId);
+    Task<bool> UpdateTicketAsync(int ticketId, int userId, UpdateTicketDto dto);
     Task<IEnumerable<AuditLogDto>> GetHistoryAsync(int ticketId);
 }
