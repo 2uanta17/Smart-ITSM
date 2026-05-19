@@ -169,25 +169,18 @@ public class TicketService : ITicketService
     public async Task<IEnumerable<TicketDto>> GetAllAsync()
     {
         IEnumerable<Ticket> tickets = await _repository.GetAllAsync();
-        await _slaEscalationService.CheckAndEscalateAsync(tickets);
         return tickets.Select(MapToDto);
     }
 
     public async Task<IEnumerable<TicketDto>> GetMyTicketsAsync(int userId)
     {
         IEnumerable<Ticket> tickets = await _repository.GetByRequesterIdAsync(userId);
-        await _slaEscalationService.CheckAndEscalateAsync(tickets);
         return tickets.Select(MapToDto);
     }
 
     public async Task<TicketDto?> GetByIdAsync(int id)
     {
         Ticket? ticket = await _repository.GetByIdAsync(id);
-        if (ticket != null)
-        {
-            await _slaEscalationService.CheckAndEscalateAsync(new[] { ticket });
-        }
-
         return ticket == null ? null : MapToDto(ticket);
     }
 
