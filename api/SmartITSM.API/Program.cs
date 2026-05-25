@@ -30,7 +30,8 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+        sqlOptions.EnableRetryOnFailure()));
 
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     {
@@ -202,6 +203,12 @@ app.UseAuthorization();
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();
+
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    AppDbContext dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    dbContext.Database.Migrate();
+}
 
 app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapHub<CommentsHub>("/hubs/comments");

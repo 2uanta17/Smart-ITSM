@@ -61,14 +61,9 @@ The frontend utilizes a modular folder structure, separating logic, types, and A
 
 ## Getting Started
 
-### Prerequisites
+### Quick Start with Docker
 
-- **.NET 9 SDK**
-- **Node.js (v18+)**
-- **SQL Server**
-- **EF Core Global Tools** (`dotnet tool install --global dotnet-ef`)
-
-### Installation
+The easiest way to run the entire stack (Database, API, and Frontend) is using [Docker Desktop](https://www.docker.com/products/docker-desktop/).
 
 1.  **Clone the repository**:
 
@@ -77,43 +72,93 @@ The frontend utilizes a modular folder structure, separating logic, types, and A
     cd SmartITSM
     ```
 
-2.  **Backend Setup**:
-    - Navigate to the API folder:
-      ```bash
-      cd api/SmartITSM.API
-      ```
-    - Update the connection string in `appsettings.json` (or `appsettings.Development.json`):
-      ```json
-      "ConnectionStrings": {
-        "DefaultConnection": "Server=YOUR_SERVER;Database=SmartITSM;Trusted_Connection=True;TrustServerCertificate=True"
-      }
-      ```
-    - Apply database migrations:
-      ```bash
-      dotnet ef database update --project ../SmartITSM.Infrastructure --startup-project .
-      ```
+2.  **Configure Secrets**:
+    Create a `.env` file in the root directory and add your keys (use `.env.example` as a template if available, or copy the block below):
 
-> [!NOTE]
-> As the demo seeding script is not included in the public repository, you will need to manually initialize the database with an Admin user or refer to the internal documentation for bootstrapping instructions.
+    ```env
+    # Database (SQL Server 2022)
+    DB_PASSWORD=YourStrongPassword123!
+    DB_NAME=SmartITSM
 
-3.  **Configuration**:
-    - Open `api/SmartITSM.API/appsettings.json` and provide your **Gemini API Key**.
-    - (Optional) Update `JwtSettings:Key` with a secure random string for production-like testing.
-    - (Optional) Configure `MailtrapSettings` or `SmtpSettings` to enable email notifications.
+    # Security (JWT)
+    JWT_SECRET=Your_Super_Secret_Key_At_Least_32_Chars
+    JWT_ISSUER=SmartITSM
+    JWT_AUDIENCE=SmartITSM_UI
 
-4.  **Frontend Setup**:
-    - Navigate to the frontend folder:
-      ```bash
-      cd ../../frontend
-      ```
-    - Install dependencies:
-      ```bash
-      npm install
-      ```
-    - Create a `.env` file in the `frontend` root and add:
-      ```env
-      VITE_API_URL=http://localhost:5096/api
-      ```
+    # AI (Gemini)
+    GEMINI_API_KEY=your_key_here
+
+    # Frontend/Internal
+    FRONTEND_BASE_URL=http://localhost:3000
+    VITE_API_URL=http://localhost:8080/api
+    ```
+
+3.  **Start the Platform**:
+
+    ```bash
+    docker compose up -d --build
+    ```
+
+4.  **Seed Demo Data** (Optional but Recommended):
+    Run the following command to populate the database with realistic tickets, users, and audit logs:
+    ```bash
+    # Note: Use // for path if on Windows/Git Bash, or / on Linux/macOS
+    docker exec -i smartitsm-db //opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "YourStrongPassword123!" -d SmartITSM -C -I < api/seed-smartitsm-demo-data.sql
+    ```
+
+### Access Points
+
+| Service         | URL                                                    |
+| :-------------- | :----------------------------------------------------- |
+| **Frontend UI** | [http://localhost:3000](http://localhost:3000)         |
+| **Backend API** | [http://localhost:8080/api](http://localhost:8080/api) |
+| **Database**    | `localhost:1433` (User: `sa`, Pass: `YourPassword`)    |
+
+---
+
+### Manual Alternative Setup (Development)
+
+If you prefer to run services manually for debugging:
+
+#### Prerequisites
+
+- **.NET 9 SDK**
+- **Node.js (v20+)**
+- **SQL Server**
+- **EF Core Global Tools** (`dotnet tool install --global dotnet-ef`)
+
+#### 1. Backend Setup
+
+1. Navigate to: `cd api/SmartITSM.API`
+2. Configure `appsettings.Development.json` with your connection string and API keys.
+3. Apply migrations:
+   ```bash
+   dotnet ef database update --project ../SmartITSM.Infrastructure --startup-project .
+   ```
+4. Run: `dotnet run`
+
+#### 2. Frontend Setup
+
+1. Navigate to: `cd frontend`
+2. Install dependencies: `npm install`
+3. Create `.env` with `VITE_API_URL=http://localhost:5036/api` (standard .NET dev port)
+4. Run: `npm run dev`
+   - (Optional) Update `JwtSettings:Key` with a secure random string for production-like testing.
+   - (Optional) Configure `MailtrapSettings` or `SmtpSettings` to enable email notifications.
+
+5. **Frontend Setup**:
+   - Navigate to the frontend folder:
+     ```bash
+     cd ../../frontend
+     ```
+   - Install dependencies:
+     ```bash
+     npm install
+     ```
+   - Create a `.env` file in the `frontend` root and add:
+     ```env
+     VITE_API_URL=http://localhost:5096/api
+     ```
 
 ### Running the Project
 
@@ -125,10 +170,9 @@ The frontend utilizes a modular folder structure, separating logic, types, and A
       ```
     - The API documentation (Swagger) will be available at `http://localhost:5096/swagger`.
 
-2.  **Start the Frontend**:
-    - Open a **new** terminal and navigate to the frontend folder:
-      `bash
-    cd frontend
-    npm run dev
-    `
-      The app should now be running at [http://localhost:5173](http://localhost:5173).
+2.  **Start the Frontend**: - Open a **new** terminal and navigate to the frontend folder:
+    `bash
+cd frontend
+npm run dev
+`
+    The app should now be running at [http://localhost:5173](http://localhost:5173).

@@ -1,0 +1,2 @@
+# Hide SQL seeding scripts from the GitHub Language Statistics
+api/seed-smartitsm-demo-data.sql linguist-vendored

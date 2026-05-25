@@ -1,0 +1,18 @@
+# .dockerignore for .NET Backend
+**/.bin
+**/.obj
+**/.vs
+**/.vscode
+**/.git
+**/.github
+**/bin
+**/obj
+**/artifacts
+**/out
+**/dist
+.idea
+.rider
+*.sln.user
+*.user
+appsettings.Development.json
+appsettings.Local.json
