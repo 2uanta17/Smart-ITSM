@@ -5,4 +5,5 @@ namespace SmartITSM.Application.Interfaces;
 public interface ISlaEscalationService
 {
     Task CheckAndEscalateAsync(IEnumerable<Ticket> tickets);
+    Task CheckAndEscalateSlaAsync(int ticketId);
 }

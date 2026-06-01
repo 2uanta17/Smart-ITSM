@@ -1,10 +1,11 @@
-﻿using SmartITSM.Application.DTOs;
+using SmartITSM.Application.DTOs;
 using SmartITSM.Application.Interfaces;
 using SmartITSM.Core.Constants;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
 using SmartITSM.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
+using Hangfire;
 
 namespace SmartITSM.Application.Services;
 
@@ -21,6 +22,7 @@ public class TicketService : ITicketService
     private readonly ICommentRealtimeService _commentRealtimeService;
     private readonly ITicketRealtimeService _ticketRealtimeService;
     private readonly IConfiguration _configuration;
+    private readonly IBackgroundJobClient _backgroundJobClient;
 
     public TicketService(
         ITicketRepository repository,
@@ -33,7 +35,8 @@ public class TicketService : ITicketService
         ISlaEscalationService slaEscalationService,
         ICommentRealtimeService commentRealtimeService,
         ITicketRealtimeService ticketRealtimeService,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IBackgroundJobClient backgroundJobClient)
     {
         _repository = repository;
         _slaPolicyRepo = slaPolicyRepo;
@@ -46,6 +49,7 @@ public class TicketService : ITicketService
         _commentRealtimeService = commentRealtimeService;
         _ticketRealtimeService = ticketRealtimeService;
         _configuration = configuration;
+        _backgroundJobClient = backgroundJobClient;
     }
 
     public async Task<TicketDto> CreateAsync(CreateTicketDto dto, int requesterId)
@@ -96,6 +100,14 @@ public class TicketService : ITicketService
         ticket.StatusId = requiresApproval ? TicketStatusIds.PendingApproval : TicketStatusIds.Open;
 
         Ticket created = await _repository.AddAsync(ticket);
+
+        if (created.DueDate.HasValue)
+        {
+            _backgroundJobClient.Schedule<ISlaEscalationService>(
+                service => service.CheckAndEscalateSlaAsync(created.Id),
+                created.DueDate.Value);
+        }
+
         Ticket? fullTicket = await _repository.GetByIdAsync(created.Id);
 
         // EMAIL TRIGGER: Confirmation to the person who opened the ticket

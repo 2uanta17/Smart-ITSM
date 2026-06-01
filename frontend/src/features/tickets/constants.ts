@@ -15,6 +15,7 @@ export const TICKET_PRIORITY = {
   MEDIUM: "Medium",
   HIGH: "High",
   CRITICAL: "Critical",
+  URGENT: "Urgent",
 } as const;
 
 export type TicketPriority =
@@ -25,6 +26,7 @@ export const TICKET_PRIORITY_MAP: Record<TicketPriority, number> = {
   [TICKET_PRIORITY.MEDIUM]: 1,
   [TICKET_PRIORITY.HIGH]: 2,
   [TICKET_PRIORITY.CRITICAL]: 3,
+  [TICKET_PRIORITY.URGENT]: 4,
 };
 
 export const TICKET_PRIORITY_OPTIONS = Object.entries(TICKET_PRIORITY).map(

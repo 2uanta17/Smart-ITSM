@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.SignalR;
+using Hangfire;
 
 using SmartITSM.API.Hubs;
 using SmartITSM.API.Providers;
@@ -32,6 +33,14 @@ JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
         sqlOptions.EnableRetryOnFailure()));
+
+builder.Services.AddHangfire(config => config
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UseSqlServerStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHangfireServer();
 
 builder.Services.AddIdentity<User, IdentityRole<int>>(options =>
     {
@@ -164,7 +173,6 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<ICommentRealtimeService, CommentRealtimeService>();
 builder.Services.AddScoped<ITicketRealtimeService, TicketRealtimeService>();
 builder.Services.AddSignalR();
-builder.Services.AddHostedService<SlaBreachMonitorService>();
 
 WebApplication app = builder.Build();
 string frontendBaseUrl = (builder.Configuration["FrontendSettings:BaseUrl"] ?? FrontendDefaults.LocalBaseUrl).TrimEnd('/');
@@ -200,6 +208,7 @@ app.UseStaticFiles();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseHangfireDashboard("/hangfire");
 
 app.UseMiddleware<ExceptionMiddleware>();
 app.MapControllers();

@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using SmartITSM.Core.Enums;
 
 namespace SmartITSM.Core.Entities;
@@ -25,6 +25,8 @@ public class Ticket
     public DateTime? ResolvedAt { get; set; }
 
     public DateTime? DueDate { get; set; }
+
+    public bool IsSlaBreached { get; set; } = false;
 
     public string? AttachmentPath { get; set; }
 

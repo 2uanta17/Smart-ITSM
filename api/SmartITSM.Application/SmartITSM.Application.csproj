@@ -1,19 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <ProjectReference Include="..\SmartITSM.Core\SmartITSM.Core.csproj"/>
+        <ProjectReference Include="..\SmartITSM.Core\SmartITSM.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Mappers\"/>
+        <Folder Include="Mappers\" />
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="ClosedXML" Version="0.105.0"/>
+        <PackageReference Include="ClosedXML" Version="0.105.0" />
+        <PackageReference Include="Hangfire.Core" Version="1.8.23" />
     </ItemGroup>
 
     <PropertyGroup>

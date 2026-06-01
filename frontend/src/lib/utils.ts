@@ -26,6 +26,7 @@ export const getErrorMessage = (error: unknown): string => {
 
 export const getPriorityColor = (priority: string) => {
   switch (priority) {
+    case "Urgent":
     case "Critical":
       return "red";
     case "High":
