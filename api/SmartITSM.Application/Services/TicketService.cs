@@ -18,7 +18,6 @@ public class TicketService : ITicketService
     private readonly IEmailService _emailService;
     private readonly IUserRepository _userRepository;
     private readonly INotificationService _notificationService;
-    private readonly ISlaEscalationService _slaEscalationService;
     private readonly ICommentRealtimeService _commentRealtimeService;
     private readonly ITicketRealtimeService _ticketRealtimeService;
     private readonly IConfiguration _configuration;
@@ -32,7 +31,6 @@ public class TicketService : ITicketService
         IEmailService emailService,
         IUserRepository userRepository,
         INotificationService notificationService,
-        ISlaEscalationService slaEscalationService,
         ICommentRealtimeService commentRealtimeService,
         ITicketRealtimeService ticketRealtimeService,
         IConfiguration configuration,
@@ -45,7 +43,6 @@ public class TicketService : ITicketService
         _emailService = emailService;
         _userRepository = userRepository;
         _notificationService = notificationService;
-        _slaEscalationService = slaEscalationService;
         _commentRealtimeService = commentRealtimeService;
         _ticketRealtimeService = ticketRealtimeService;
         _configuration = configuration;
