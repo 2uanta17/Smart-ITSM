@@ -1,17 +1,21 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 using SmartITSM.Core.Constants;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
+using SmartITSM.Core.Interfaces;
 
 namespace SmartITSM.Infrastructure.Data;
 
 public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
 {
-    public AppDbContext(DbContextOptions options) : base(options)
+    private readonly ICurrentUserContext _userContext;
+
+    public AppDbContext(DbContextOptions options, ICurrentUserContext userContext) : base(options)
     {
+        _userContext = userContext;
     }
 
     public DbSet<Department> Departments { get; set; }
@@ -35,6 +39,12 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
 
         modelBuilder.Entity<User>().ToTable("Users");
         modelBuilder.Entity<IdentityRole<int>>().ToTable("Roles");
+
+        modelBuilder.Entity<Ticket>().HasQueryFilter(t =>
+            _userContext.IsSystem ||
+            _userContext.Role == AppRoles.Admin ||
+            _userContext.Role == AppRoles.Technician ||
+            (_userContext.UserId.HasValue && t.RequesterId == _userContext.UserId.Value));
         // modelBuilder.Entity<Department>().HasData(
         //     new Department { Id = 1, Name = "IT Support", LocationCode = "HQ-L1" }
         // );
