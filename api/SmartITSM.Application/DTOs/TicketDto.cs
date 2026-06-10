@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using SmartITSM.Core.Enums;
 
@@ -12,6 +12,7 @@ public record TicketDto(
     string Status,
     string CategoryName,
     string RequesterName,
+    int RequesterId,
     DateTime CreatedAt,
     DateTime? ResolvedAt,
     string? AttachmentUrl,

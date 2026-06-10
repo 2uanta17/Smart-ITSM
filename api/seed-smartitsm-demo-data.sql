@@ -71,7 +71,8 @@ BEGIN TRY
         (3, 'In Progress'),
         (4, 'Resolved'),
         (5, 'Closed'),
-        (6, 'Pending Approval');
+        (6, 'Pending Approval'),
+        (7, 'Cancelled');
     SET IDENTITY_INSERT TicketStatuses OFF;
 
     SET IDENTITY_INSERT Categories ON;

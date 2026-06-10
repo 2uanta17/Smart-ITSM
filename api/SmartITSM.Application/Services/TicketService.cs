@@ -100,9 +100,11 @@ public class TicketService : ITicketService
 
         if (created.DueDate.HasValue)
         {
-            _backgroundJobClient.Schedule<ISlaEscalationService>(
+            string jobId = _backgroundJobClient.Schedule<ISlaEscalationService>(
                 service => service.CheckAndEscalateSlaAsync(created.Id),
                 created.DueDate.Value);
+            created.SlaJobId = jobId;
+            await _repository.UpdateAsync(created);
         }
 
         Ticket? fullTicket = await _repository.GetByIdAsync(created.Id);
@@ -301,6 +303,12 @@ public class TicketService : ITicketService
         ticket.StatusId = TicketStatusIds.Resolved;
         ticket.ResolvedAt = DateTime.UtcNow;
 
+        if (!string.IsNullOrEmpty(ticket.SlaJobId))
+        {
+            _backgroundJobClient.Delete(ticket.SlaJobId);
+            ticket.SlaJobId = null;
+        }
+
         await _repository.UpdateAsync(ticket);
         await _repository.AddAuditLogAsync(new AuditLog
         {
@@ -351,6 +359,12 @@ public class TicketService : ITicketService
 
         ticket.StatusId = TicketStatusIds.Cancelled;
 
+        if (!string.IsNullOrEmpty(ticket.SlaJobId))
+        {
+            _backgroundJobClient.Delete(ticket.SlaJobId);
+            ticket.SlaJobId = null;
+        }
+
         await _repository.UpdateAsync(ticket);
         await _repository.AddAuditLogAsync(new AuditLog
         {
@@ -387,11 +401,31 @@ public class TicketService : ITicketService
             changes.Add($"Priority changed from {ticket.Priority} to {dto.Priority}");
             ticket.Priority = dto.Priority;
 
+            // Delete old SLA scheduled background job
+            if (!string.IsNullOrEmpty(ticket.SlaJobId))
+            {
+                _backgroundJobClient.Delete(ticket.SlaJobId);
+                ticket.SlaJobId = null;
+            }
+
             // Update DueDate based on new priority SLA
             SlaPolicy? slaPolicy = await _slaPolicyRepo.GetByPriorityAsync(dto.Priority);
             if (slaPolicy != null)
             {
                 ticket.DueDate = ticket.CreatedAt.AddHours(slaPolicy.MaxResolveHours);
+
+                // Schedule new SLA check job at the new DueDate
+                if (ticket.DueDate.HasValue)
+                {
+                    string newJobId = _backgroundJobClient.Schedule<ISlaEscalationService>(
+                        service => service.CheckAndEscalateSlaAsync(ticket.Id),
+                        ticket.DueDate.Value);
+                    ticket.SlaJobId = newJobId;
+                }
+            }
+            else
+            {
+                ticket.DueDate = null;
             }
         }
 
@@ -445,6 +479,7 @@ public class TicketService : ITicketService
             ticket.Status?.Name ?? "Unknown",
             ticket.Category?.Name ?? "Unknown",
             ticket.Requester?.FullName ?? "Unknown",
+            ticket.RequesterId,
             ticket.CreatedAt,
             ticket.ResolvedAt,
             !string.IsNullOrEmpty(ticket.AttachmentPath) ? $"/uploads/{ticket.AttachmentPath}" : null,

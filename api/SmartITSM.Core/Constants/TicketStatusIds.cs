@@ -1,4 +1,4 @@
-﻿namespace SmartITSM.Core.Constants;
+namespace SmartITSM.Core.Constants;
 
 public static class TicketStatusIds
 {
@@ -6,6 +6,7 @@ public static class TicketStatusIds
     public const int Pending = 2;
     public const int InProgress = 3;
     public const int Resolved = 4;
-    public const int Cancelled = 5;
+    public const int Closed = 5;
     public const int PendingApproval = 6;
+    public const int Cancelled = 7;
 }

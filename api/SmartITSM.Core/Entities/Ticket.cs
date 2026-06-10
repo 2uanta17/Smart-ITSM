@@ -28,6 +28,8 @@ public class Ticket
 
     public bool IsSlaBreached { get; set; } = false;
 
+    public string? SlaJobId { get; set; }
+
     public string? AttachmentPath { get; set; }
 
     // Relationships

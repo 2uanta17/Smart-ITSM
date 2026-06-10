@@ -446,7 +446,11 @@ export const TicketDetailPage = () => {
               Attachment
             </Text>
             <Image
-              src={`${apiUrl?.replace("/api", "")}/${ticket.attachmentUrl}`}
+              src={`${apiUrl?.replace("/api", "")}${
+                ticket.attachmentUrl.startsWith("/")
+                  ? ticket.attachmentUrl
+                  : `/${ticket.attachmentUrl}`
+              }`}
               w={300}
               style={{ maxWidth: "100%", height: "auto" }}
               alt="Ticket Attachment"

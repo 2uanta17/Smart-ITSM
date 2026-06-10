@@ -1,9 +1,10 @@
-﻿using SmartITSM.Application.DTOs;
+using SmartITSM.Application.DTOs;
 using SmartITSM.Application.Interfaces;
 using SmartITSM.Core.Constants;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
 using SmartITSM.Core.Interfaces;
+using Hangfire;
 
 namespace SmartITSM.Application.Services;
 
@@ -12,13 +13,18 @@ public class ApprovalService : IApprovalService
     private readonly IApprovalRequestRepository _approvalRepo;
     private readonly ITicketRepository _ticketRepo;
     private readonly INotificationService _notificationService;
+    private readonly IBackgroundJobClient _backgroundJobClient;
 
-    public ApprovalService(IApprovalRequestRepository approvalRepo, ITicketRepository ticketRepo,
-        INotificationService notificationService)
+    public ApprovalService(
+        IApprovalRequestRepository approvalRepo, 
+        ITicketRepository ticketRepo,
+        INotificationService notificationService,
+        IBackgroundJobClient backgroundJobClient)
     {
         _approvalRepo = approvalRepo;
         _ticketRepo = ticketRepo;
         _notificationService = notificationService;
+        _backgroundJobClient = backgroundJobClient;
     }
 
     public async Task<IEnumerable<ApprovalDto>> GetMyPendingApprovalsAsync(int approverId)
@@ -56,8 +62,15 @@ public class ApprovalService : IApprovalService
         if (ticket != null)
         {
             // If approved, status = Open
-            // If rejected, status = Closed
+            // If rejected, status = Closed/Cancelled
             ticket.StatusId = isApproved ? TicketStatusIds.Open : TicketStatusIds.Cancelled;
+
+            if (!isApproved && !string.IsNullOrEmpty(ticket.SlaJobId))
+            {
+                _backgroundJobClient.Delete(ticket.SlaJobId);
+                ticket.SlaJobId = null;
+            }
+
             await _ticketRepo.UpdateAsync(ticket);
 
             await _ticketRepo.AddAuditLogAsync(new AuditLog

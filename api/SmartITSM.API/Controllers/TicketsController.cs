@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SmartITSM.Application.DTOs;
@@ -55,12 +55,34 @@ public class TicketsController : ControllerBase
     {
         var ticket = await _service.GetByIdAsync(id);
         if (ticket == null) return NotFound();
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+        var userId = int.Parse(userIdClaim);
+
+        if (!User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.Technician) && ticket.RequesterId != userId)
+        {
+            return Forbid();
+        }
+
         return Ok(ticket);
     }
 
     [HttpGet("{id}/comments")]
     public async Task<ActionResult<IEnumerable<TicketCommentDto>>> GetComments(int id)
     {
+        var ticket = await _service.GetByIdAsync(id);
+        if (ticket == null) return NotFound("Ticket not found.");
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+        var userId = int.Parse(userIdClaim);
+
+        if (!User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.Technician) && ticket.RequesterId != userId)
+        {
+            return Forbid();
+        }
+
         var comments = await _service.GetCommentsAsync(id);
         return Ok(comments);
     }
@@ -68,12 +90,19 @@ public class TicketsController : ControllerBase
     [HttpPost("{id}/comments")]
     public async Task<ActionResult<TicketCommentDto>> AddComment(int id, [FromBody] CreateTicketCommentDto dto)
     {
+        var ticket = await _service.GetByIdAsync(id);
+        if (ticket == null) return NotFound("Ticket not found.");
+
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
         if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+        var userId = int.Parse(userIdClaim);
 
-        var comment = await _service.AddCommentAsync(id, int.Parse(userIdClaim), dto);
-        if (comment == null) return NotFound("Ticket not found.");
+        if (!User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.Technician) && ticket.RequesterId != userId)
+        {
+            return Forbid();
+        }
 
+        var comment = await _service.AddCommentAsync(id, userId, dto);
         return Ok(comment);
     }
 
@@ -131,6 +160,18 @@ public class TicketsController : ControllerBase
     [HttpGet("{id}/history")]
     public async Task<ActionResult<IEnumerable<AuditLogDto>>> GetHistory(int id)
     {
+        var ticket = await _service.GetByIdAsync(id);
+        if (ticket == null) return NotFound("Ticket not found.");
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? User.FindFirst("sub")?.Value;
+        if (string.IsNullOrEmpty(userIdClaim)) return Unauthorized();
+        var userId = int.Parse(userIdClaim);
+
+        if (!User.IsInRole(AppRoles.Admin) && !User.IsInRole(AppRoles.Technician) && ticket.RequesterId != userId)
+        {
+            return Forbid();
+        }
+
         var history = await _service.GetHistoryAsync(id);
         return Ok(history);
     }

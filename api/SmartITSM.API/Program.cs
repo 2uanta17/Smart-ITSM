@@ -199,8 +199,7 @@ app.UseCors(x => x
     .WithOrigins(frontendBaseUrl)
     .AllowAnyHeader()
     .AllowAnyMethod()
-    .AllowCredentials()
-    .SetIsOriginAllowed(origin => true));
+    .AllowCredentials());
 
 app.UseHttpsRedirection();
 
