@@ -348,31 +348,33 @@ export const TicketDetailPage = () => {
       </Modal>
 
       <Paper p="md" withBorder mb="lg" bg="gray.0">
-        <Group justify="space-between">
-          <Group gap="xs">
-            <Title order={3}>
+        <Group justify="space-between" align="center" wrap="wrap" gap="md">
+          <Stack gap="xs" style={{ flex: 1, minWidth: 280 }}>
+            <Title order={3} style={{ wordBreak: "break-word" }}>
               #{ticket.id} - {ticket.title}
             </Title>
-            <Badge size="lg" color={getTicketStatusColor(ticket.status)}>
-              {ticket.status}
-            </Badge>
-            <Badge size="lg" color={getPriorityColor(ticket.priority)}>
-              {ticket.priority}
-            </Badge>
-            {isStaff && (
-              <ActionIcon
-                variant="subtle"
-                radius="xs"
-                color="green"
-                onClick={handleEditOpen}
-                title="Edit Category/Priority"
-              >
-                <IconEdit size={18} />
-              </ActionIcon>
-            )}
-          </Group>
+            <Group gap="xs" wrap="wrap">
+              <Badge size="lg" color={getTicketStatusColor(ticket.status)}>
+                {ticket.status}
+              </Badge>
+              <Badge size="lg" color={getPriorityColor(ticket.priority)}>
+                {ticket.priority}
+              </Badge>
+              {isStaff && (
+                <ActionIcon
+                  variant="subtle"
+                  radius="xs"
+                  color="green"
+                  onClick={handleEditOpen}
+                  title="Edit Category/Priority"
+                >
+                  <IconEdit size={18} />
+                </ActionIcon>
+              )}
+            </Group>
+          </Stack>
 
-          <Group>
+          <Group gap="xs" wrap="wrap">
             {isStaff && ticket.status === TICKET_STATUS.OPEN && (
               <Button
                 color="green"
@@ -411,19 +413,19 @@ export const TicketDetailPage = () => {
 
       <Paper p="xl" withBorder mb="lg">
         <Grid mb="lg">
-          <Grid.Col span={4}>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
             <Text fw={500} c="dimmed">
               Requester
             </Text>
             <Text>{ticket.requesterName}</Text>
           </Grid.Col>
-          <Grid.Col span={4}>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
             <Text fw={500} c="dimmed">
               Category
             </Text>
             <Text>{ticket.categoryName}</Text>
           </Grid.Col>
-          <Grid.Col span={4}>
+          <Grid.Col span={{ base: 12, sm: 4 }}>
             <Text fw={500} c="dimmed">
               Assigned Tech
             </Text>
@@ -446,6 +448,7 @@ export const TicketDetailPage = () => {
             <Image
               src={`${apiUrl?.replace("/api", "")}/${ticket.attachmentUrl}`}
               w={300}
+              style={{ maxWidth: "100%", height: "auto" }}
               alt="Ticket Attachment"
             />
           </>
@@ -517,7 +520,7 @@ export const TicketDetailPage = () => {
             </ScrollArea>
 
             <Divider my="sm" />
-            <Group align="flex-start">
+            <Group align="flex-start" wrap="nowrap">
               <Textarea
                 placeholder="Type your message here..."
                 flex={1}

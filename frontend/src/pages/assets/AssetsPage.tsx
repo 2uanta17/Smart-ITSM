@@ -181,38 +181,42 @@ export const AssetsPage = () => {
 
   return (
     <div>
-      <Group justify="space-between" mb="lg">
+      <Group justify="space-between" mb="lg" wrap="wrap" gap="sm">
         <Title order={2}>Assets</Title>
-        <Group>
+        <Group gap="xs" wrap="wrap" style={{ flexGrow: 1, justifyContent: "flex-end" }}>
           <Select
             placeholder="Filter by Type"
             data={typeOptions}
             value={filterType}
             onChange={setFilterType}
             clearable
-            w={200}
+            w={{ base: "100%", sm: 200 }}
           />
           {user?.role === "Admin" && (
-            <Button onClick={handleOpenCreate}>Add Asset</Button>
+            <Button onClick={handleOpenCreate} w={{ base: "100%", sm: "auto" }}>
+              Add Asset
+            </Button>
           )}
         </Group>
       </Group>
 
       <Paper p="xs" withBorder pos="relative">
         <LoadingOverlay visible={isLoading} />
-        <Table highlightOnHover verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Tag</Table.Th>
-              <Table.Th>Category</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Assigned To</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={700}>
+          <Table highlightOnHover verticalSpacing="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Name</Table.Th>
+                <Table.Th>Tag</Table.Th>
+                <Table.Th>Category</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th>Assigned To</Table.Th>
+                <Table.Th>Actions</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
         {!isLoading && assets.length === 0 && (
           <Text ta="center" py="xl" c="dimmed">
             No assets found.

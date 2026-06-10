@@ -139,18 +139,20 @@ export const ApprovalsPage = () => {
 
       <Paper p="xs" withBorder pos="relative">
         <LoadingOverlay visible={isLoading} />
-        <Table highlightOnHover verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Ticket ID</Table.Th>
-              <Table.Th>Subject</Table.Th>
-              <Table.Th>Requester</Table.Th>
-              <Table.Th>Requested On</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={600}>
+          <Table highlightOnHover verticalSpacing="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Ticket ID</Table.Th>
+                <Table.Th>Subject</Table.Th>
+                <Table.Th>Requester</Table.Th>
+                <Table.Th>Requested On</Table.Th>
+                <Table.Th>Actions</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
         {!isLoading && approvals.length === 0 && (
           <Text ta="center" py="xl" c="dimmed">
             No pending approvals.

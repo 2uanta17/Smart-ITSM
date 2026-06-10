@@ -169,7 +169,7 @@ export const DepartmentsPage = () => {
 
   return (
     <div>
-      <Group justify="space-between" mb="lg">
+      <Group justify="space-between" mb="lg" wrap="wrap" gap="sm">
         <Title order={2}>Departments</Title>
         {isAdmin && <Button onClick={handleOpenCreate}>Add Department</Button>}
       </Group>
@@ -177,21 +177,23 @@ export const DepartmentsPage = () => {
       <Paper p="xs" withBorder pos="relative">
         <LoadingOverlay visible={isLoading} />
 
-        <Table highlightOnHover verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th w={50}>ID</Table.Th>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Location</Table.Th>
-              {isAdmin && (
-                <Table.Th w={180} ta="center">
-                  Actions
-                </Table.Th>
-              )}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={500}>
+          <Table highlightOnHover verticalSpacing="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th w={50}>ID</Table.Th>
+                <Table.Th>Name</Table.Th>
+                <Table.Th>Location</Table.Th>
+                {isAdmin && (
+                  <Table.Th w={180} ta="center">
+                    Actions
+                  </Table.Th>
+                )}
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
 
         {!isLoading && departments.length === 0 && (
           <Text ta="center" py="xl" c="dimmed">

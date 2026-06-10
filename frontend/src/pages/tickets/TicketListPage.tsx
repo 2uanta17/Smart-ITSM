@@ -11,10 +11,12 @@ import { useAuthStore } from "@/stores/authStore";
 import {
   Badge,
   Button,
+  Grid,
   Group,
   LoadingOverlay,
   Paper,
   Select,
+  Stack,
   Table,
   Text,
   TextInput,
@@ -225,70 +227,85 @@ export const TicketListPage = () => {
 
   return (
     <div>
-      <Group justify="space-between" mb="lg">
-        <Title order={2}>Tickets</Title>
-        <Group>
-          <TextInput
-            placeholder="Search by ID, title, category, status..."
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.currentTarget.value)}
-            w={300}
-          />
-          <Select
-            placeholder="Filter by Status"
-            data={statusOptions}
-            value={filterStatus}
-            onChange={setFilterStatus}
-            clearable
-            w={200}
-          />
-          <Select
-            placeholder="Filter by Category"
-            data={categoryOptions}
-            value={filterCategory}
-            onChange={setFilterCategory}
-            clearable
-            w={200}
-          />
-          <Select
-            data={sortOptions}
-            value={sortBy}
-            onChange={(value) =>
-              setSortBy((value as TicketSortOption) || "newest")
-            }
-            w={180}
-          />
-          {user?.role === "Admin" && (
-            <Button
-              variant="outline"
-              color="gray"
-              onClick={() => exportMutation.mutate()}
-              loading={exportMutation.isPending}
-            >
-              Export to Excel
+      <Stack gap="md" mb="lg">
+        <Group justify="space-between" align="center" wrap="wrap" gap="sm">
+          <Title order={2}>Tickets</Title>
+          <Group gap="xs" wrap="wrap">
+            {user?.role === "Admin" && (
+              <Button
+                variant="outline"
+                color="gray"
+                onClick={() => exportMutation.mutate()}
+                loading={exportMutation.isPending}
+              >
+                Export to Excel
+              </Button>
+            )}
+            <Button onClick={() => navigate("/app/tickets/create")}>
+              New Ticket
             </Button>
-          )}
-          <Button onClick={() => navigate("/app/tickets/create")}>
-            New Ticket
-          </Button>
+          </Group>
         </Group>
-      </Group>
+
+        <Grid gutter="xs">
+          <Grid.Col span={{ base: 12, md: 4 }}>
+            <TextInput
+              placeholder="Search by ID, title, category, status..."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.currentTarget.value)}
+              w="100%"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, sm: 4, md: 2 }}>
+            <Select
+              placeholder="Filter by Status"
+              data={statusOptions}
+              value={filterStatus}
+              onChange={setFilterStatus}
+              clearable
+              w="100%"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 6, sm: 4, md: 3 }}>
+            <Select
+              placeholder="Filter by Category"
+              data={categoryOptions}
+              value={filterCategory}
+              onChange={setFilterCategory}
+              clearable
+              w="100%"
+            />
+          </Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 4, md: 3 }}>
+            <Select
+              data={sortOptions}
+              value={sortBy}
+              onChange={(value) =>
+                setSortBy((value as TicketSortOption) || "newest")
+              }
+              w="100%"
+            />
+          </Grid.Col>
+        </Grid>
+      </Stack>
 
       <Paper p="xs" withBorder pos="relative">
         <LoadingOverlay visible={isLoading} />
-        <Table highlightOnHover verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>ID</Table.Th>
-              <Table.Th>Subject</Table.Th>
-              <Table.Th>Category</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Created</Table.Th>
-              <Table.Th>Due Date</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={800}>
+          <Table highlightOnHover verticalSpacing="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>ID</Table.Th>
+                <Table.Th>Subject</Table.Th>
+                <Table.Th>Category</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th>Created</Table.Th>
+                <Table.Th>Due Date</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
         {!isLoading && filteredTickets.length === 0 && (
           <Text ta="center" py="xl" c="dimmed">
             No tickets found.

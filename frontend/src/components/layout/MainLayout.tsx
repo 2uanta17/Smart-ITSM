@@ -7,6 +7,7 @@ import { useAuthStore } from "@/stores/authStore";
 import {
   ActionIcon,
   AppShell,
+  Avatar,
   Badge,
   Burger,
   Button,
@@ -27,7 +28,6 @@ import { IconBell } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-
 interface NavItem {
   label: string;
   link: string;
@@ -159,16 +159,17 @@ export function MainLayout() {
     >
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
-          <Group>
+          <Group gap="xs">
             <Burger
               opened={opened}
               onClick={toggle}
               hiddenFrom="sm"
               size="sm"
             />
-            <Text fw={700}>IT Service Management</Text>
+            <Text fw={700} visibleFrom="xs">IT Service Management</Text>
+            <Text fw={700} hiddenFrom="xs">Smart-ITSM</Text>
           </Group>
-          <Group>
+          <Group gap="xs">
             <Popover
               width={320}
               position="bottom-end"
@@ -261,7 +262,12 @@ export function MainLayout() {
             <Menu shadow="md" width={220} position="bottom-end">
               <Menu.Target>
                 <UnstyledButton>
-                  <Text size="sm">{user?.email ?? "Account"}</Text>
+                  <Group gap="xs" wrap="nowrap">
+                    <Avatar radius="xl" size="sm" color="green">
+                      {user?.email ? user.email.charAt(0).toUpperCase() : "U"}
+                    </Avatar>
+                    <Text size="sm" visibleFrom="sm">{user?.email ?? "Account"}</Text>
+                  </Group>
                 </UnstyledButton>
               </Menu.Target>
 

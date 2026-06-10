@@ -36,10 +36,10 @@ export const RequesterDashboard = () => {
   if (isLoadingStats || isLoadingRecent) {
     return (
       <Grid>
-        <Grid.Col span={6}>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
           <Skeleton height={120} radius="xs" />
         </Grid.Col>
-        <Grid.Col span={6}>
+        <Grid.Col span={{ base: 12, sm: 6 }}>
           <Skeleton height={120} radius="xs" />
         </Grid.Col>
         <Grid.Col span={12}>

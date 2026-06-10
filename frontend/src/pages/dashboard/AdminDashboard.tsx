@@ -190,10 +190,10 @@ export const AdminDashboard = () => {
             <Skeleton height={120} radius="xs" />
           </Grid.Col>
         ))}
-        <Grid.Col span={6}>
+        <Grid.Col span={{ base: 12, md: 6 }}>
           <Skeleton height={300} radius="xs" />
         </Grid.Col>
-        <Grid.Col span={6}>
+        <Grid.Col span={{ base: 12, md: 6 }}>
           <Skeleton height={300} radius="xs" />
         </Grid.Col>
         <Grid.Col span={12}>
@@ -223,7 +223,7 @@ export const AdminDashboard = () => {
         <Title order={2}>Overview</Title>
 
         <Paper withBorder p="md" radius="xs">
-          <Group align="end" wrap="wrap">
+          <Group align="end" wrap="wrap" style={{ width: "100%" }}>
             <Select
               label="Date Range"
               value={datePreset}
@@ -239,7 +239,7 @@ export const AdminDashboard = () => {
                 { value: "last-month", label: "Last Month" },
                 { value: "custom", label: "Custom Range" },
               ]}
-              w={220}
+              w={{ base: "100%", sm: 220 }}
             />
             <TextInput
               label="Start Date"
@@ -247,7 +247,7 @@ export const AdminDashboard = () => {
               value={startDateInput}
               onChange={(event) => setStartDateInput(event.currentTarget.value)}
               disabled={datePreset !== "custom"}
-              w={180}
+              w={{ base: "100%", sm: 180 }}
             />
             <TextInput
               label="End Date"
@@ -255,9 +255,9 @@ export const AdminDashboard = () => {
               value={endDateInput}
               onChange={(event) => setEndDateInput(event.currentTarget.value)}
               disabled={datePreset !== "custom"}
-              w={180}
+              w={{ base: "100%", sm: 180 }}
             />
-            <Button onClick={handleSearch} color="green" radius="xs">
+            <Button onClick={handleSearch} color="green" radius="xs" w={{ base: "100%", sm: "auto" }}>
               Search
             </Button>
           </Group>
@@ -461,44 +461,46 @@ export const AdminDashboard = () => {
                   {stats?.unassignedTickets || 0} Unassigned
                 </Badge>
               </Group>
-              <Table highlightOnHover striped>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Ticket</Table.Th>
-                    <Table.Th>Priority</Table.Th>
-                    <Table.Th>Created</Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {actionRequired.length > 0 ? (
-                    actionRequired.map((ticket) => (
-                      <Table.Tr
-                        key={ticket.ticketId}
-                        style={{ cursor: "pointer" }}
-                        onClick={() =>
-                          navigate(`/app/tickets/${ticket.ticketId}`)
-                        }
-                      >
-                        <Table.Td fw={500}>
-                          #{ticket.ticketId} - {ticket.title}
-                        </Table.Td>
-                        <Table.Td>
-                          <Badge color={getPriorityColor(ticket.priority)}>
-                            {ticket.priority}
-                          </Badge>
-                        </Table.Td>
-                        <Table.Td>{formatLocalDate(ticket.createdAt)}</Table.Td>
-                      </Table.Tr>
-                    ))
-                  ) : (
+              <Table.ScrollContainer minWidth={600}>
+                <Table highlightOnHover striped>
+                  <Table.Thead>
                     <Table.Tr>
-                      <Table.Td colSpan={3} ta="center" c="dimmed">
-                        All caught up!
-                      </Table.Td>
+                      <Table.Th>Ticket</Table.Th>
+                      <Table.Th>Priority</Table.Th>
+                      <Table.Th>Created</Table.Th>
                     </Table.Tr>
-                  )}
-                </Table.Tbody>
-              </Table>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {actionRequired.length > 0 ? (
+                      actionRequired.map((ticket) => (
+                        <Table.Tr
+                          key={ticket.ticketId}
+                          style={{ cursor: "pointer" }}
+                          onClick={() =>
+                            navigate(`/app/tickets/${ticket.ticketId}`)
+                          }
+                        >
+                          <Table.Td fw={500}>
+                            #{ticket.ticketId} - {ticket.title}
+                          </Table.Td>
+                          <Table.Td>
+                            <Badge color={getPriorityColor(ticket.priority)}>
+                              {ticket.priority}
+                            </Badge>
+                          </Table.Td>
+                          <Table.Td>{formatLocalDate(ticket.createdAt)}</Table.Td>
+                        </Table.Tr>
+                      ))
+                    ) : (
+                      <Table.Tr>
+                        <Table.Td colSpan={3} ta="center" c="dimmed">
+                          All caught up!
+                        </Table.Td>
+                      </Table.Tr>
+                    )}
+                  </Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
             </Paper>
           </Grid.Col>
         </Grid>
@@ -507,43 +509,45 @@ export const AdminDashboard = () => {
           <Title order={4} mb="md" mt={0}>
             Recent Activity
           </Title>
-          <Table highlightOnHover striped verticalSpacing="sm">
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>Activity</Table.Th>
-                <Table.Th>Ticket</Table.Th>
-                <Table.Th>User</Table.Th>
-                <Table.Th>Time</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {recentActivity.length > 0 ? (
-                recentActivity.map((activity, index) => (
-                  <Table.Tr
-                    key={`${activity.ticketId}-${activity.timestamp}-${index}`}
-                  >
-                    <Table.Td>{activity.action}</Table.Td>
-                    <Table.Td
-                      style={{ cursor: "pointer", fontWeight: 500 }}
-                      onClick={() =>
-                        navigate(`/app/tickets/${activity.ticketId}`)
-                      }
-                    >
-                      #{activity.ticketId} - {activity.ticketTitle}
-                    </Table.Td>
-                    <Table.Td>{activity.user}</Table.Td>
-                    <Table.Td>{formatLocalTime(activity.timestamp)}</Table.Td>
-                  </Table.Tr>
-                ))
-              ) : (
+          <Table.ScrollContainer minWidth={600}>
+            <Table highlightOnHover striped verticalSpacing="sm">
+              <Table.Thead>
                 <Table.Tr>
-                  <Table.Td colSpan={4} ta="center" c="dimmed">
-                    No activity found for the selected date range.
-                  </Table.Td>
+                  <Table.Th>Activity</Table.Th>
+                  <Table.Th>Ticket</Table.Th>
+                  <Table.Th>User</Table.Th>
+                  <Table.Th>Time</Table.Th>
                 </Table.Tr>
-              )}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {recentActivity.length > 0 ? (
+                  recentActivity.map((activity, index) => (
+                    <Table.Tr
+                      key={`${activity.ticketId}-${activity.timestamp}-${index}`}
+                    >
+                      <Table.Td>{activity.action}</Table.Td>
+                      <Table.Td
+                        style={{ cursor: "pointer", fontWeight: 500 }}
+                        onClick={() =>
+                          navigate(`/app/tickets/${activity.ticketId}`)
+                        }
+                      >
+                        #{activity.ticketId} - {activity.ticketTitle}
+                      </Table.Td>
+                      <Table.Td>{activity.user}</Table.Td>
+                      <Table.Td>{formatLocalTime(activity.timestamp)}</Table.Td>
+                    </Table.Tr>
+                  ))
+                ) : (
+                  <Table.Tr>
+                    <Table.Td colSpan={4} ta="center" c="dimmed">
+                      No activity found for the selected date range.
+                    </Table.Td>
+                  </Table.Tr>
+                )}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
         </Paper>
       </Stack>
     </Box>

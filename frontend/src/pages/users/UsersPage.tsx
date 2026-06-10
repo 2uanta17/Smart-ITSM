@@ -10,6 +10,7 @@ import { getErrorMessage } from "@/lib/utils";
 import { useAuthStore } from "@/stores/authStore";
 import {
   Button,
+  Grid,
   Group,
   LoadingOverlay,
   Paper,
@@ -173,55 +174,66 @@ export const UsersPage = () => {
 
   return (
     <div>
-      <Group justify="space-between" mb="lg">
+      <Group justify="space-between" mb="lg" wrap="wrap" gap="sm">
         <Title order={2}>Users</Title>
         {currentUser?.role === "Admin" && (
           <Button onClick={handleCreateOpen}>Add User</Button>
         )}
       </Group>
 
-      <Group mb="md" grow>
-        <TextInput
-          placeholder="Search by ID, Name, or Email"
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.currentTarget.value)}
-        />
-        <Select
-          placeholder="Filter by Role"
-          data={roleOptions}
-          value={filterRole}
-          onChange={setFilterRole}
-          clearable
-        />
-        <Select
-          placeholder="Filter by Department"
-          data={departmentOptions}
-          value={filterDepartment}
-          onChange={setFilterDepartment}
-          clearable
-        />
-      </Group>
+      <Grid mb="md" gutter="xs">
+        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+          <TextInput
+            placeholder="Search by ID, Name, or Email"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.currentTarget.value)}
+            w="100%"
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 6, md: 4 }}>
+          <Select
+            placeholder="Filter by Role"
+            data={roleOptions}
+            value={filterRole}
+            onChange={setFilterRole}
+            clearable
+            w="100%"
+          />
+        </Grid.Col>
+        <Grid.Col span={{ base: 12, sm: 12, md: 4 }}>
+          <Select
+            placeholder="Filter by Department"
+            data={departmentOptions}
+            value={filterDepartment}
+            onChange={setFilterDepartment}
+            clearable
+            w="100%"
+          />
+        </Grid.Col>
+      </Grid>
 
       <Paper p="xs" withBorder pos="relative">
         <LoadingOverlay visible={isLoading} />
 
-        <Table highlightOnHover verticalSpacing="sm">
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th w={60}>ID</Table.Th>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Email</Table.Th>
-              <Table.Th>Role</Table.Th>
-              <Table.Th>Department</Table.Th>
-              {currentUser?.role === "Admin" && (
-                <Table.Th w={130} ta="center">
-                  Actions
-                </Table.Th>
-              )}
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>{rows}</Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={650}>
+          <Table highlightOnHover verticalSpacing="sm">
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th w={60}>ID</Table.Th>
+                <Table.Th>Name</Table.Th>
+                <Table.Th>Email</Table.Th>
+                <Table.Th>Role</Table.Th>
+                <Table.Th>Department</Table.Th>
+                {currentUser?.role === "Admin" && (
+                  <Table.Th w={130} ta="center">
+                    Actions
+                  </Table.Th>
+                )}
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>{rows}</Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
 
         {!isLoading && filteredUsers.length === 0 && (
           <Text ta="center" py="xl" c="dimmed">
