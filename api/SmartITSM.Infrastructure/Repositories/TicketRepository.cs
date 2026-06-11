@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Interfaces;
 using SmartITSM.Infrastructure.Data;
@@ -17,6 +17,7 @@ public class TicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetAllAsync()
     {
         return await _context.Tickets
+            .AsNoTracking()
             .Include(t => t.Requester)
             .Include(t => t.Category)
             .Include(t => t.Status)
@@ -28,6 +29,7 @@ public class TicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetByRequesterIdAsync(int requesterId)
     {
         return await _context.Tickets
+            .AsNoTracking()
             .Where(t => t.RequesterId == requesterId)
             .Include(t => t.Requester)
             .Include(t => t.Category)
@@ -39,6 +41,7 @@ public class TicketRepository : ITicketRepository
     public async Task<Ticket?> GetByIdAsync(int id)
     {
         return await _context.Tickets
+            .AsNoTracking()
             .Include(t => t.Requester)
             .Include(t => t.Category)
             .Include(t => t.Status)
@@ -69,6 +72,7 @@ public class TicketRepository : ITicketRepository
     public async Task<IEnumerable<TicketComment>> GetCommentsAsync(int ticketId)
     {
         return await _context.TicketComments
+            .AsNoTracking()
             .Include(tc => tc.User)
             .Where(tc => tc.TicketId == ticketId)
             .OrderBy(tc => tc.CreatedAt)
@@ -92,6 +96,7 @@ public class TicketRepository : ITicketRepository
     public async Task<IEnumerable<AuditLog>> GetAuditLogsAsync(int ticketId)
     {
         return await _context.AuditLogs
+            .AsNoTracking()
             .Include(al => al.User)
             .Where(al => al.TicketId == ticketId)
             .OrderByDescending(al => al.Timestamp)
@@ -135,6 +140,7 @@ public class TicketRepository : ITicketRepository
         DateTime? endDate = null)
     {
         var query = _context.AuditLogs
+            .AsNoTracking()
             .Include(al => al.Ticket)
             .Include(al => al.User)
             .AsQueryable();
@@ -165,6 +171,7 @@ public class TicketRepository : ITicketRepository
         DateTime? endDate = null)
     {
         var query = _context.Tickets
+            .AsNoTracking()
             .Include(t => t.Status)
             .Where(t => t.AssignedTechId == null && t.StatusId != 5)
             .AsQueryable();
@@ -180,6 +187,7 @@ public class TicketRepository : ITicketRepository
     public async Task<IEnumerable<Ticket>> GetResolvedTicketsAsync(DateTime? startDate = null, DateTime? endDate = null)
     {
         var query = _context.Tickets
+            .AsNoTracking()
             .Include(t => t.AssignedTech)
             .Where(t => t.ResolvedAt.HasValue)
             .AsQueryable();

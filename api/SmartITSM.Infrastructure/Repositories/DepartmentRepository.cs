@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Interfaces;
 using SmartITSM.Infrastructure.Data;
@@ -16,7 +16,7 @@ public class DepartmentRepository : IDepartmentRepository
 
     public async Task<IEnumerable<Department>> GetAllAsync()
     {
-        return await _context.Departments.ToListAsync();
+        return await _context.Departments.AsNoTracking().ToListAsync();
     }
 
     public async Task<Department?> GetByIdAsync(int id)

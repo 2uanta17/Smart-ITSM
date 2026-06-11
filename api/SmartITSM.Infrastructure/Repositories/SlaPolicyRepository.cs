@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
 using SmartITSM.Core.Interfaces;
@@ -18,11 +18,12 @@ public class SlaPolicyRepository : ISlaPolicyRepository
     public async Task<SlaPolicy?> GetByPriorityAsync(TicketPriority priority)
     {
         return await _context.SlaPolicies
+            .AsNoTracking()
             .FirstOrDefaultAsync(s => s.PriorityLevel == priority);
     }
 
     public async Task<IEnumerable<SlaPolicy>> GetAllAsync()
     {
-        return await _context.SlaPolicies.ToListAsync();
+        return await _context.SlaPolicies.AsNoTracking().ToListAsync();
     }
 }

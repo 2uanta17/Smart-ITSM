@@ -146,5 +146,19 @@ public class AppDbContext : IdentityDbContext<User, IdentityRole<int>, int>
             .WithMany()
             .HasForeignKey(n => n.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Performance Indexes
+        modelBuilder.Entity<Ticket>().HasIndex(t => t.RequesterId);
+        modelBuilder.Entity<Ticket>().HasIndex(t => t.AssignedTechId);
+        modelBuilder.Entity<Ticket>().HasIndex(t => t.StatusId);
+        modelBuilder.Entity<Ticket>().HasIndex(t => t.CreatedAt);
+
+        modelBuilder.Entity<Notification>().HasIndex(n => new { n.UserId, n.IsRead });
+        modelBuilder.Entity<Notification>().HasIndex(n => new { n.UserId, n.IsSeen });
+
+        modelBuilder.Entity<ApprovalRequest>().HasIndex(a => new { a.ApproverId, a.Status });
+
+        modelBuilder.Entity<AuditLog>().HasIndex(al => al.TicketId);
+        modelBuilder.Entity<AuditLog>().HasIndex(al => al.Timestamp);
     }
 }

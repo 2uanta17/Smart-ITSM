@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Interfaces;
@@ -25,6 +25,7 @@ public class NotificationRepository : INotificationRepository
     public async Task<IEnumerable<Notification>> GetUnreadByUserIdAsync(int userId)
     {
         return await _context.Notifications
+            .AsNoTracking()
             .Where(n => n.UserId == userId && !n.IsRead)
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync();
@@ -52,35 +53,22 @@ public class NotificationRepository : INotificationRepository
 
     public async Task MarkAllAsReadByUserIdAsync(int userId)
     {
-        List<Notification> unreadNotifications = await _context.Notifications
+        await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsRead)
-            .ToListAsync();
-
-        foreach (Notification notification in unreadNotifications)
-        {
-            notification.IsRead = true;
-        }
-
-        await _context.SaveChangesAsync();
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true));
     }
 
     public async Task MarkAllAsSeenByUserIdAsync(int userId)
     {
-        List<Notification> unseenNotifications = await _context.Notifications
+        await _context.Notifications
             .Where(n => n.UserId == userId && !n.IsSeen)
-            .ToListAsync();
-
-        foreach (Notification notification in unseenNotifications)
-        {
-            notification.IsSeen = true;
-        }
-
-        await _context.SaveChangesAsync();
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsSeen, true));
     }
 
     public async Task<IEnumerable<Notification>> GetLatestByUserIdAsync(int userId, int limit = 10)
     {
         return await _context.Notifications
+            .AsNoTracking()
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
             .Take(limit)

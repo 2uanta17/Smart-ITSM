@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Interfaces;
 using SmartITSM.Infrastructure.Data;
@@ -16,7 +16,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<IEnumerable<Category>> GetAllAsync()
     {
-        return await _context.Categories.ToListAsync();
+        return await _context.Categories.AsNoTracking().ToListAsync();
     }
 
     public async Task<Category?> GetByIdAsync(int id)

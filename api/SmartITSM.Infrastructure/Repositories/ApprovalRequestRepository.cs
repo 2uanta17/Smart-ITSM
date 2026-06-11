@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Enums;
 using SmartITSM.Core.Interfaces;
@@ -18,6 +18,7 @@ public class ApprovalRequestRepository : IApprovalRequestRepository
     public async Task<ApprovalRequest?> GetByIdAsync(int id)
     {
         return await _context.ApprovalRequests
+            .AsNoTracking()
             .Include(a => a.Ticket)
             .Include(a => a.Approver)
             .FirstOrDefaultAsync(a => a.Id == id);
@@ -26,6 +27,7 @@ public class ApprovalRequestRepository : IApprovalRequestRepository
     public async Task<IEnumerable<ApprovalRequest>> GetPendingByApproverIdAsync(int approverId)
     {
         return await _context.ApprovalRequests
+            .AsNoTracking()
             .Include(a => a.Ticket)
             .ThenInclude(t => t.Requester)
             .Where(a => a.ApproverId == approverId && a.Status == ApprovalStatus.Pending)

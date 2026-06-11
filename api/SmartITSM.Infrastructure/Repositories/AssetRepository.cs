@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Interfaces;
 using SmartITSM.Infrastructure.Data;
@@ -17,6 +17,7 @@ public class AssetRepository : IAssetRepository
     public async Task<IEnumerable<Asset>> GetAllAsync(int? typeId = null)
     {
         var query = _context.Assets
+            .AsNoTracking()
             .Include(a => a.Type)
             .Include(a => a.AssignedUser)
             .AsQueryable();
@@ -32,6 +33,7 @@ public class AssetRepository : IAssetRepository
     public async Task<Asset?> GetByIdAsync(int id)
     {
         return await _context.Assets
+            .AsNoTracking()
             .Include(a => a.Type)
             .Include(a => a.AssignedUser)
             .FirstOrDefaultAsync(a => a.Id == id);
@@ -40,6 +42,7 @@ public class AssetRepository : IAssetRepository
     public async Task<Asset?> GetByTagAsync(string assetTag)
     {
         return await _context.Assets
+            .AsNoTracking()
             .Include(a => a.Type)
             .FirstOrDefaultAsync(a => a.AssetTag == assetTag);
     }

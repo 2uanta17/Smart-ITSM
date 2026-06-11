@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 
 using SmartITSM.Core.Entities;
 using SmartITSM.Core.Interfaces;
@@ -22,6 +22,7 @@ public class UserRepository : IUserRepository
     public async Task<IEnumerable<User>> GetAllAsync()
     {
         return await _context.Users
+            .AsNoTracking()
             .Include(u => u.Department)
             .ToListAsync();
     }
@@ -29,6 +30,7 @@ public class UserRepository : IUserRepository
     public async Task<User?> GetByIdAsync(int id)
     {
         return await _context.Users
+            .AsNoTracking()
             .Include(u => u.Department)
             .FirstOrDefaultAsync(u => u.Id == id);
     }
